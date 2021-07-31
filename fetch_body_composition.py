@@ -44,12 +44,12 @@ def fetch_body_composition(token:str, from_date:str, to_date:str) -> List:
 if __name__ == '__main__':
     config_ini = configparser.ConfigParser()
     config_ini.read('config.ini', encoding='utf-8')
-    hp_access_token = config_ini.get('DEFAULT', 'hp_access_token')
+    access_token = config_ini.get('HEALTH PLANET', 'access_token')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('from_date', type=str)
     parser.add_argument('to_date', type=str)
-    parser.add_argument('-t', '--token', default=hp_access_token, type=str)
+    parser.add_argument('-t', '--token', default=access_token, type=str)
     args = parser.parse_args()
 
     result = fetch_body_composition(args.token, args.from_date, args.to_date)
