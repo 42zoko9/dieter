@@ -130,4 +130,5 @@ dmypy.json
 
 # dieter
 *.ini
+*.json
 .DS_Store
