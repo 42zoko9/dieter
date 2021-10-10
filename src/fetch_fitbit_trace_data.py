@@ -47,6 +47,7 @@ def export_trace_data(category:str, date:str) -> None:
     refresh_token = config_ini.get('FITBIT', 'refresh_token')
 
     # 該当データを取得
+    # 未着用でもデータは出力される
     headers = {'Authorization': 'Bearer ' + access_token}
     url = 'https://api.fitbit.com/1.2/user/-/{category}/date/{date}.json'.format(
         category=uri_category, date=date
