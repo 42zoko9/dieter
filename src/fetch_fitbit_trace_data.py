@@ -6,7 +6,6 @@ import urllib.request
 from fetch_fitbit_authorization_code import fetch_authorization_code
 from fetch_fitbit_tokens import fetch_tokens
 
-
 def export_trace_data(category:str, date:str) -> None:
     '''fitbitからトレースデータを取得しjsonファイルに保存
 
@@ -64,7 +63,12 @@ def export_trace_data(category:str, date:str) -> None:
         jsonfile.write(result.decode('utf-8'))
 
 if __name__ == '__main__':
-    date = '2021-09-28'
-    export_trace_data('activities', date)
-    export_trace_data('food', date)
-    export_trace_data('sleep', date)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('date', type=str)
+    args = parser.parse_args()
+
+    export_trace_data('activities', args.date)
+    export_trace_data('food', args.date)
+    export_trace_data('sleep', args.date)
