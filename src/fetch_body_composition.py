@@ -30,6 +30,7 @@ def fetch_body_composition(from_date:str, to_date:str):
         raise Exception('from_date is over 3 month ago')
     
     # 該当データを取得
+    # データが存在しない時はExceptionを返す
     params = {
         'access_token': access_token,
         'data': '1',
