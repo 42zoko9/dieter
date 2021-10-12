@@ -4,7 +4,7 @@ import traceback
 import configparser
 import urllib.request
 from fetch_fitbit_authorization_code import fetch_authorization_code
-from fetch_fitbit_tokens import fetch_tokens
+from fetch_fitbit_tokens import fetch_tokens, refresh_access_token
 
 def export_trace_data(category:str, date:str) -> None:
     '''fitbitからトレースデータを取得しjsonファイルに保存
@@ -46,16 +46,28 @@ def export_trace_data(category:str, date:str) -> None:
     refresh_token = config_ini.get('FITBIT', 'refresh_token')
 
     # 該当データを取得
-    # 未着用でもデータは出力される
-    headers = {'Authorization': 'Bearer ' + access_token}
-    url = 'https://api.fitbit.com/1.2/user/-/{category}/date/{date}.json'.format(
-        category=uri_category, date=date
-    )
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req) as res:
-        result = res.read()
-
-    # jsonファイルを保存
+    # 未着用でもデータは出力される   
+    try:
+        headers = {'Authorization': 'Bearer ' + access_token}
+        url = 'https://api.fitbit.com/1.2/user/-/{category}/date/{date}.json'.format(
+            category=uri_category, date=date
+        )
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req) as res:
+            result = res.read()
+    except urllib.error.HTTPError:
+        refresh_access_token()
+        print('refresh acccess token')
+        config_ini.read(path_config_ini, encoding='utf-8')
+        access_token = config_ini.get('FITBIT', 'access_token')
+        headers = {'Authorization': 'Bearer ' + access_token}
+        url = 'https://api.fitbit.com/1.2/user/-/{category}/date/{date}.json'.format(
+            category=uri_category, date=date
+        )
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req) as res:
+            result = res.read()
+    # jsonファイルとして保存
     path_jsonfile = 'data/fitbit/{category}/{date}.json'.format(
         category=category, date=date
     )
