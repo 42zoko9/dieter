@@ -7,15 +7,18 @@ import base64
 import ast
 from fetch_fitbit_authorization_code import fetch_authorization_code
 
-def fetch_tokens(redirect_uri: str) -> None:
+def fetch_tokens(
+    redirect_uri: str = 'http://localhost:8080',
+    path_config_ini: str = 'config.ini'
+) -> None:
     '''fitbitのaccess_tokenとrefresh_tokenを取得しfitbit_config.iniに書き出す
 
     Args:
         redirect_uri (str): リダイレクト先のURI
+        path_config_ini (str): config.iniファイルのパス
     '''
     # fitbit_config.iniの所在確認
     config_ini = configparser.ConfigParser()
-    path_config_ini = 'fitbit_config.ini'
     if os.path.isfile(path_config_ini):
         pass
     else:
@@ -56,10 +59,14 @@ def fetch_tokens(redirect_uri: str) -> None:
     with open(path_config_ini, 'w') as configfile:
         config_ini.write(configfile)
 
-def refresh_access_token() -> None:
+def refresh_access_token(
+    path_config_ini: str = 'config.ini'
+) -> None:
     '''access_tokenを再取得しiniファイルを更新する
+
+    Args:
+        path_config_ini (str): config.iniファイルのパス
     '''
-    path_config_ini = 'fitbit_config.ini'
     config_ini = configparser.ConfigParser()
     config_ini.read(path_config_ini, encoding='utf-8')
     client_id = config_ini.get('FITBIT', 'client_id')
@@ -90,5 +97,4 @@ def refresh_access_token() -> None:
         config_ini.write(configfile)
 
 if __name__ == '__main__':
-    redirect_uri = 'http://localhost:8080'
-    fetch_tokens(redirect_uri)
+    fetch_tokens()

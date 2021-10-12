@@ -6,12 +6,19 @@ import urllib.request
 from fetch_fitbit_authorization_code import fetch_authorization_code
 from fetch_fitbit_tokens import fetch_tokens, refresh_access_token
 
-def export_trace_data(category:str, date:str) -> None:
+def export_trace_data(
+    category: str,
+    date: str,
+    redirect_uri: str = 'http://localhost:8080',
+    path_config_ini: str = 'config.ini'
+) -> None:
     '''fitbitからトレースデータを取得しjsonファイルに保存
 
     Args:
-        category (str): activities, food, sleep
-        date (str): 取得したいデータの日付, yyyy-mm-dd
+        category (str): "activities", "food", "sleep"のいずれかを入力
+        date (str): 取得したいデータの日付, "yyyy-mm-dd"形式で入力
+        redirect_uri (str): リダイレクト先のURI
+        path_config_ini (str): config.iniファイルのパス
     '''
     # categoryの前処理
     if category == 'activities':
@@ -23,8 +30,6 @@ def export_trace_data(category:str, date:str) -> None:
 
     # access_tokenとrefresh_tokenの取得
     config_ini = configparser.ConfigParser()
-    path_config_ini = 'fitbit_config.ini'
-    redirect_uri = 'http://localhost:8080'
     if os.path.isfile(path_config_ini):
         pass
     else:

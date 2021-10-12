@@ -6,21 +6,23 @@ import configparser
 import webbrowser
 
 def fetch_authorization_code(
-    redirect_uri:str,
     scope: List[str],
-    expiers_in: int = 604800
+    expiers_in: int = 604800,
+    redirect_uri: str = 'http://localhost:8080',
+    path_config_ini: str = 'config.ini'
 ) -> None:
     '''fitbit APIの認可コードを取得しiniファイルに上書きする
 
     Args:
-        redirect_uri (str): リダイレクト先のURI
         scope (List): APIを受け付ける領域の一覧
         expiers_in (int): 認可コードの寿命
+        redirect_uri (str): リダイレクト先のURI
+        path_config_ini (str): config.iniファイルのパス
     '''
     # fitbit_config.iniが存在しない場合，ファイルを作成する
     config_ini = configparser.ConfigParser()
-    if os.path.isfile('fitbit_config.ini'):
-        config_ini.read('fitbit_config.ini', encoding='utf-8')
+    if os.path.isfile(path_config_ini):
+        config_ini.read(path_config_ini, encoding='utf-8')
         client_id = config_ini['FITBIT']['client_id']
     else:
         config_ini['FITBIT'] = {}
@@ -57,17 +59,16 @@ def fetch_authorization_code(
     config_ini['FITBIT']['authorization_code'] = auth_code
 
     # iniファイルに書き込み
-    with open('fitbit_config.ini', 'w') as configfile:
+    with open(path_config_ini, 'w') as configfile:
         config_ini.write(configfile)
 
 if __name__ == '__main__':
     # パラメータの設定
-    redirect_uri = 'http://localhost:8080'
     scope = ['activity', 'heartrate', 'nutrition', 'sleep']
     expiers_in = 604800
 
     # 認可コードの取得
-    fetch_authorization_code(redirect_uri, scope, expiers_in)
+    fetch_authorization_code(scope, expiers_in)
 
 
 
