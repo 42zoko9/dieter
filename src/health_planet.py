@@ -6,7 +6,7 @@ import json
 import configparser
 import argparse
 
-def fetch_body_composition(from_date:str, to_date:str):
+def export_body_composition_data(from_date:str, to_date:str) -> None:
     '''Health Planetから体重と体脂肪率を取得しjson形式で保存する
 
     Args:
@@ -58,5 +58,5 @@ if __name__ == '__main__':
     parser.add_argument('to_date', type=str)
     args = parser.parse_args()
 
-    result = fetch_body_composition(args.from_date, args.to_date)
+    result = export_body_composition_data(args.from_date, args.to_date)
     print(result)
