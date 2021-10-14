@@ -14,6 +14,7 @@ mypy = "^0.910"
 pytest = "^6.2.4"
 isort = "^5.9.2"
 tox = "^3.24.0"
+google-cloud-storage = "^1.42.3"
 
 [tool.poetry.dev-dependencies]
 
