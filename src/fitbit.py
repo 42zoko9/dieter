@@ -3,7 +3,6 @@ import os
 import sys
 import ast
 import base64
-import traceback
 import configparser
 import webbrowser
 import urllib.parse, urllib.request
@@ -42,14 +41,9 @@ def export_trace_data(
     config_ini.read(path_config_ini, encoding='utf-8')
     try:
         access_token = config_ini.get('FITBIT', 'access_token')
-    except:
+    except Exception as e:
+        print(e)
         print('the access token is not listed in fitbit_config.ini')
-        try:
-            write_tokens(redirect_uri)
-        except:
-            print(traceback.format_exc())
-            print('Notice: the authorization code may have expired.')
-            sys.exit()
 
     # 該当データを取得
     # 未着用でもデータは出力される   
@@ -73,6 +67,7 @@ def export_trace_data(
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req) as res:
             result = res.read()
+    
     # jsonファイルとして保存
     path_jsonfile = 'data/fitbit/{category}/{date}.json'.format(
         category=category, date=date
@@ -95,9 +90,7 @@ def write_tokens(
     if os.path.isfile(path_config_ini):
         pass
     else:
-        scope = ['activity', 'heartrate', 'nutrition', 'sleep']
-        expiers_in = 604800
-        write_authorization_code(redirect_uri, scope, expiers_in)
+        raise ValueError('"{}" is not found. try "write_authorization_code"'.format(path_config_ini))
     config_ini.read(path_config_ini, encoding='utf-8')
     client_id = config_ini.get('FITBIT', 'client_id')
     client_secret = config_ini.get('FITBIT', 'client_secret')
@@ -118,10 +111,10 @@ def write_tokens(
     }
     try:
         req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), headers=headers)
-    except:
-        print(traceback.format_exc())
+    except Exception as e:
+        print(e)
         print('Notice: the authorization code may have expired.')
-        sys.exit()
+    
     with urllib.request.urlopen(req) as res:
         body = res.read()
     res_dict = ast.literal_eval(body.decode('utf-8'))
@@ -133,11 +126,13 @@ def write_tokens(
         config_ini.write(configfile)
 
 def refresh_access_token(
+    redirect_uri: str = 'http://localhost:8080',
     path_config_ini: str = 'config.ini'
 ) -> None:
     '''access_tokenを再取得しiniファイルを更新する
 
     Args:
+        redirect_uri (str): リダイレクト先のURI
         path_config_ini (str): config.iniファイルのパス
     '''
     config_ini = configparser.ConfigParser()
@@ -157,11 +152,14 @@ def refresh_access_token(
     }
     try:
         req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), headers=headers)
-    except:
-        print(traceback.format_exc())
-        sys.exit()
-    with urllib.request.urlopen(req) as res:
-        body = res.read()
+    except Exception as e:
+        print(e)
+    try:
+        with urllib.request.urlopen(req) as res:
+            body = res.read()
+    except Exception as e:
+        print(e)
+        print('try "write_tokens"')
     res_dict = ast.literal_eval(body.decode('utf-8'))
 
     # fitbit_config.iniへ書き込み
@@ -230,9 +228,15 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('date', type=str)
+    parser.add_argument('--write', action='store_true', help='run "write_*()')
+    parser.add_argument('--date', type=str, default='2021-10-01')
     args = parser.parse_args()
 
-    export_trace_data('activities', args.date)
-    export_trace_data('food', args.date)
-    export_trace_data('sleep', args.date)
+    if args.write:
+        scope = ['activity', 'heartrate', 'nutrition', 'sleep']
+        write_authorization_code(scope)
+        write_tokens()
+    else:
+        export_trace_data('activities', args.date)
+        export_trace_data('food', args.date)
+        export_trace_data('sleep', args.date)
