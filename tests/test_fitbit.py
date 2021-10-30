@@ -1,8 +1,10 @@
-import pytest
+import configparser
 import os
 import tempfile
-import configparser
+
+import pytest
 from src.fitbit import Fitbit
+
 
 class TestReadConfig:
     '''read_configメソッドのテスト
@@ -17,7 +19,7 @@ class TestReadConfig:
         '''検証に使用するデータを生成する
         '''
         # 検証にパスするiniファイル作成
-        self.valid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.valid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.valid_ini.writelines([
             '[FITBIT]\n',
             'client_id = fake_client_id\n',
@@ -29,7 +31,7 @@ class TestReadConfig:
         self.valid_ini.seek(0)
 
         # 検証をパスしないiniファイル作成
-        self.invalid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.invalid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.invalid_ini.writelines([
             '[FITBIT]\n',
             'client_id = invalid_fake_client_id\n',
@@ -72,7 +74,7 @@ class TestReadConfig:
         '''検証が正しくない: 存在するファイルではあるがiniファイルではない
         '''
         # 準備
-        not_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.yml' ,dir='./data')
+        not_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.yml', dir='./data')
         not_ini.seek(0)
 
         # 実行・検証
@@ -103,6 +105,7 @@ class TestReadConfig:
         assert fb.access_token == 'fake_access_token'
         assert fb.refresh_token == 'fake_refresh_token'
 
+
 # TODO: input()やwebbrowser.open()を含む処理のテストの書き方
 class TestUpdateAuthorizationCode:
     '''authorization codeを取得できるかテストする
@@ -121,7 +124,7 @@ class TestUpdateAuthorizationCode:
         '''検証に使用するデータを生成する
         '''
         # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.fake_ini.writelines([
             '[FITBIT]\n',
             'client_id = fake_client_id\n',
@@ -141,7 +144,7 @@ class TestUpdateAuthorizationCode:
         '''検証が正しくない: scopeがlist以外で与えられている
         '''
         pass
-        
+
     def test_invalid_scope_contain_not_string(self):
         '''検証が正しくない: scopeのlistの中に不正な文字列が混入している
         '''
@@ -182,6 +185,7 @@ class TestUpdateAuthorizationCode:
         '''
         pass
 
+
 # TODO: authorization_codeが不正の場合にErrorを返すmockの作成方法
 class TestUpdateTokens:
     '''access_tokenとrefresh_tokenを取得し更新できるかを検証
@@ -195,7 +199,7 @@ class TestUpdateTokens:
         '''検証に使用するデータを生成する
         '''
         # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.fake_ini.writelines([
             '[FITBIT]\n',
             'client_id = fake_client_id\n',
@@ -210,13 +214,13 @@ class TestUpdateTokens:
         '''ダミーのiniファイル削除
         '''
         self.fake_ini.close()
-    
+
     def test_invalid_redirect_uri_not_string(self):
         '''検証が正しくない: redirect_uriが文字列以外で与えられている
         '''
         # 準備
         invalid_redirect_uri = int(71)
-        
+
         # 実行・検証
         fb = Fitbit()
         fb.read_config(self.fake_ini.name)
@@ -228,7 +232,7 @@ class TestUpdateTokens:
         '''
         # 準備
         invalid_redirect_uri = 'not_uri_format_string'
-        
+
         # 実行・検証
         fb = Fitbit()
         fb.read_config(self.fake_ini.name)
@@ -244,6 +248,7 @@ class TestUpdateTokens:
         '''検証が正しい: access_tokenとrefresh_tokenの値が更新される
         '''
         pass
+
 
 # TODO: refresh_tokenが不正の場合にErrorを返すmockの作成方法
 class TestRefreshAccessToken:
@@ -263,6 +268,7 @@ class TestRefreshAccessToken:
         '''
         pass
 
+
 # TODO: 外部に結果を出力する場合のテストの書き方
 class TestExportConfig:
     '''各インスタンス変数をiniファイルに出力できるか検証
@@ -276,7 +282,7 @@ class TestExportConfig:
         '''検証に使用するデータを生成する
         '''
         # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.fake_ini.writelines([
             '[FITBIT]\n',
             'client_id = fake_client_id\n',
@@ -303,7 +309,6 @@ class TestExportConfig:
         fb.read_config(self.fake_ini.name)
         with pytest.raises(TypeError, match='"path" type must be str.'):
             fb.export_config(invalid_path)
-        
 
     def test_invalid_path_not_found(self):
         '''検証が正しくない: pathが存在しないフォルダを指している
@@ -372,7 +377,7 @@ class TestFetchTraceData:
         '''検証に使用するデータを生成する
         '''
         # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.fake_ini.writelines([
             '[FITBIT]\n',
             'client_id = fake_client_id\n',

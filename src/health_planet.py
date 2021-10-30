@@ -1,12 +1,15 @@
-from typing import Dict, Any
-from pandas.tseries.offsets import DateOffset
-from dataclasses import dataclass
+import configparser
+import json
 import os
 import re
-import json
-import configparser
-import urllib.request, urllib.parse
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
+from typing import Any, Dict
+
 import pandas as pd
+from pandas.tseries.offsets import DateOffset
+
 
 @dataclass
 class HealthPlanet:
@@ -25,13 +28,13 @@ class HealthPlanet:
         # pathの末尾が.iniでない場合は処理を停止
         if not re.search(r'^.+\.ini$', path):
             raise ValueError('"path" must be an .ini file.')
-        
+
         # 出力先のディレクトリが存在しない場合は処理を停止
         if '/' in path:
             dirpath = '/'.join(path.split('/')[:-1])
             if not os.path.isdir(dirpath):
                 raise ValueError('no such directory')
-        
+
         # 実行
         config_ini = configparser.ConfigParser()
         config_ini.read(path, encoding='utf-8')
@@ -54,7 +57,7 @@ class HealthPlanet:
         # from_dateのフォーマット確認
         if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', from_date):
             raise ValueError('"from_date" must be yyyy-mm-dd.')
-        
+
         # 引数to_dateの型確認
         if type(to_date) != str:
             raise TypeError('"to_date" type must be str.')
@@ -62,7 +65,7 @@ class HealthPlanet:
         # to_dateのフォーマット確認
         if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', to_date):
             raise ValueError('"to_date" must be yyyy-mm-dd.')
-        
+
         # 日付の前処理
         from_dt = from_date.replace('-', '') + '000000'
         to_dt = to_date.replace('-', '') + '235959'
@@ -73,7 +76,7 @@ class HealthPlanet:
         limit_datetime = pd.Timestamp.today(tz='Asia/Tokyo') - DateOffset(months=3)
         if from_datetime < limit_datetime:
             raise ValueError('"from_date" is over 3 month ago.')
-        
+
         # 該当データを取得
         # データが存在しない時はExceptionを返す
         params = {

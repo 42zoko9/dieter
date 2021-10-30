@@ -1,19 +1,20 @@
+import base64
 import configparser
-from dataclasses import dataclass
-from typing import List, Dict, Any, Type
+import json
 import os
 import re
 import sys
-import json
-import base64
-import configparser
+import urllib.parse
+import urllib.request
 import webbrowser
-import urllib.request, urllib.parse
+from dataclasses import dataclass
+from typing import Any, Dict, List
+
 
 @dataclass
 class Fitbit:
     client_id: str = ''
-    client_secret: str  = ''
+    client_secret: str = ''
     auth_code: str = ''
     access_token: str = ''
     refresh_token: str = ''
@@ -31,13 +32,13 @@ class Fitbit:
         # pathの末尾が.iniでない場合は処理を停止
         if not re.search(r'^.+\.ini$', path):
             raise ValueError('"path" must be an .ini file.')
-        
+
         # 出力先のディレクトリが存在しない場合は処理を停止
         if '/' in path:
             dirpath = '/'.join(path.split('/')[:-1])
             if not os.path.isdir(dirpath):
                 raise ValueError('no such directory')
-        
+
         # 実行
         config_ini = configparser.ConfigParser()
         config_ini.read(path, encoding='utf-8')
@@ -78,13 +79,12 @@ class Fitbit:
         # 引数dateの型確認
         if type(date) != str:
             raise TypeError('"date" type must be str.')
-        
+
         # dateのフォーマット確認
         if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', date):
             raise ValueError('"date" must be yyyy-mm-dd.')
 
         # 該当データを取得
-        # 未着用でもデータは出力される   
         try:
             headers = {'Authorization': 'Bearer ' + self.access_token}
             url = 'https://api.fitbit.com/1.2/user/-/{category}/date/{date}.json'.format(
@@ -103,7 +103,7 @@ class Fitbit:
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req) as res:
                 body = res.read()
-        
+
         # 辞書型で出力
         return json.loads(body.decode('utf-8'))
 
@@ -142,7 +142,7 @@ class Fitbit:
         except Exception as e:
             print(e)
             print('Notice: the authorization code may have expired.')
-        
+
         with urllib.request.urlopen(req) as res:
             body = res.read()
         res_dict = eval(body.decode('utf-8'))
@@ -197,7 +197,7 @@ class Fitbit:
         if self.client_secret == '':
             client_secret = input('Enter client secret of fitbit: ')
             self.client_secret = client_secret
-        
+
         # authorization codeが既に記入されているか確認
         if self.auth_code != '':
             is_execution = input('It looks like you already have authorization code. Do you want to run it? [y/N]').lower()
@@ -235,7 +235,7 @@ class Fitbit:
         # pathの末尾が.iniでない場合は処理を停止
         if not re.search(r'^.+\.ini$', path):
             raise ValueError('"path" must be an .ini file.')
-        
+
         # 出力先のディレクトリが存在しない場合は処理を停止
         if '/' in path:
             dirpath = '/'.join(path.split('/')[:-1])
@@ -256,6 +256,7 @@ class Fitbit:
         config_ini.set(SECTION, 'refresh_token', self.refresh_token)
         with open(path, 'w') as configfile:
             config_ini.write(configfile)
+
 
 if __name__ == '__main__':
     t = '2021-09-25'

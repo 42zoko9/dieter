@@ -1,7 +1,9 @@
-import pytest
-import tempfile
 import configparser
+import tempfile
+
+import pytest
 from src.health_planet import HealthPlanet
+
 
 class TestReadConfig:
     '''iniファイルからaccess_tokenを読み込めるか検証する
@@ -16,7 +18,7 @@ class TestReadConfig:
         '''検証に使用するデータを生成する
         '''
         # 検証にパスするiniファイル作成
-        self.valid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.valid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.valid_ini.writelines([
             '[HEALTH PLANET]\n',
             'access_token = fake_access_token'
@@ -24,7 +26,7 @@ class TestReadConfig:
         self.valid_ini.seek(0)
 
         # 検証をパスしないiniファイル作成
-        self.invalid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.invalid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.invalid_ini.writelines([
             '[HEALTH PLANET]\n',
             'invalid_access_token = fake_access_token'
@@ -63,7 +65,7 @@ class TestReadConfig:
         '''検証が正しくない: 存在するファイルではあるがiniファイルではない
         '''
         # 準備
-        not_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.yml' ,dir='./data')
+        not_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.yml', dir='./data')
         not_ini.seek(0)
 
         # 実行・検証
@@ -90,6 +92,7 @@ class TestReadConfig:
         # 検証
         assert hp.access_token == 'fake_access_token'
 
+
 class TestFetchBodyCompositionData:
     '''体組成データを取得できるか検証
     - 異常系
@@ -108,7 +111,7 @@ class TestFetchBodyCompositionData:
         '''検証に使用するデータを生成する
         '''
         # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.fake_ini.writelines([
             '[HEALTH PLANET]\n',
             'access_token = fake_access_token'
@@ -116,7 +119,7 @@ class TestFetchBodyCompositionData:
         self.fake_ini.seek(0)
 
         # 検証をパスしないiniファイル作成
-        self.fake_bad_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini' ,dir='./data')
+        self.fake_bad_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
         self.fake_bad_ini.writelines([
             '[HEALTH PLANET]\n',
             'invalid_access_token = fake_access_token'
@@ -226,11 +229,11 @@ class TestFetchBodyCompositionData:
         # 実行
         hp = HealthPlanet()
         hp.read_config(self.fake_ini.name)
-        data = hp.fetch_body_composition_data(fake_from_date, fake_to_date)
+        hp.fetch_body_composition_data(fake_from_date, fake_to_date)
 
     # TODO: mockの作成方法
     @pytest.mark.skip('mockが作成できていないため')
-    def test_valid_contained_data(self):
+    def test_valid_empty_data(self):
         '''[summary]
         '''
         # 準備
@@ -240,4 +243,4 @@ class TestFetchBodyCompositionData:
         # 実行
         hp = HealthPlanet()
         hp.read_config(self.fake_ini.name)
-        data = hp.fetch_body_composition_data(fake_from_date, fake_to_date)
+        hp.fetch_body_composition_data(fake_from_date, fake_to_date)
