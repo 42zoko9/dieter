@@ -47,10 +47,18 @@ class HealthPlanet:
         Returns:
             Dict[Any, Any]: 体組成データ
         '''
+        # 引数from_dateの型確認
+        if type(from_date) != str:
+            raise TypeError('"from_date" type must be str.')
+
         # from_dateのフォーマット確認
         if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', from_date):
             raise ValueError('"from_date" must be yyyy-mm-dd.')
         
+        # 引数to_dateの型確認
+        if type(to_date) != str:
+            raise TypeError('"to_date" type must be str.')
+
         # to_dateのフォーマット確認
         if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', to_date):
             raise ValueError('"to_date" must be yyyy-mm-dd.')

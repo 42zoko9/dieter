@@ -139,7 +139,7 @@ class TestFetchBodyCompositionData:
         # 実行・検証
         hp = HealthPlanet()
         hp.read_config(self.fake_ini.name)
-        with pytest.raises(TypeError, match='expected string or bytes-like object'):
+        with pytest.raises(TypeError, match='"from_date" type must be str.'):
             hp.fetch_body_composition_data(invalid_from_date, fake_to_date)
 
     def test_invalid_from_date_not_abide_by_format(self):
@@ -165,7 +165,7 @@ class TestFetchBodyCompositionData:
         # 実行・検証
         hp = HealthPlanet()
         hp.read_config(self.fake_ini.name)
-        with pytest.raises(TypeError, match='expected string or bytes-like object'):
+        with pytest.raises(TypeError, match='"to_date" type must be str.'):
             hp.fetch_body_composition_data(fake_from_date, invalid_to_date)
 
     def test_invalid_to_date_not_abide_by_format(self):
