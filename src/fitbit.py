@@ -1,7 +1,8 @@
 import configparser
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Type
 import os
+import re
 import sys
 import json
 import base64
@@ -17,7 +18,27 @@ class Fitbit:
     access_token: str = ''
     refresh_token: str = ''
 
-    def read_config(self, path: str):
+    def read_config(self, path: str) -> None:
+        '''FITBIT周りの環境変数が記述されたiniファイルを読み込み各インスタンス変数に代入する
+
+        Args:
+            path (str): 読み込むiniファイルのパス
+        '''
+        # 引数dateの型確認
+        if type(path) != str:
+            raise TypeError('"path" type must be str.')
+
+        # pathの末尾が.iniでない場合は処理を停止
+        if not re.search(r'^.+\.ini$', path):
+            raise ValueError('"path" must be an .ini file.')
+        
+        # 出力先のディレクトリが存在しない場合は処理を停止
+        if '/' in path:
+            dirpath = '/'.join(path.split('/')[:-1])
+            if not os.path.isdir(dirpath):
+                raise ValueError('no such directory')
+        
+        # 実行
         config_ini = configparser.ConfigParser()
         config_ini.read(path, encoding='utf-8')
         self.client_id = config_ini.get('FITBIT', 'client_id')
@@ -31,12 +52,19 @@ class Fitbit:
         category: str,
         date: str
     ) -> Dict[Any, Any]:
-        '''fitbitからトレースデータを取得しjsonファイルに出力
+        '''fitbitからトレースデータを取得し辞書型で出力
 
         Args:
             category (str): "activities", "foods", "sleep"のいずれかを入力
             date (str): 取得したいデータの日付, "yyyy-mm-dd"形式で入力
+
+        Returns:
+            Dict[Any, Any]: 取得データ
         '''
+        # 引数categoryの型確認
+        if type(category) != str:
+            raise TypeError('"category" type must be str.')
+
         # categoryの前処理
         if category == 'activities':
             uri_category = category
@@ -44,6 +72,16 @@ class Fitbit:
             uri_category = 'foods/log'
         elif category == 'sleep':
             uri_category = category
+        else:
+            raise ValueError('Please input "activities" or "foods" or "sleep"')
+
+        # 引数dateの型確認
+        if type(date) != str:
+            raise TypeError('"date" type must be str.')
+        
+        # dateのフォーマット確認
+        if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', date):
+            raise ValueError('"date" must be yyyy-mm-dd.')
 
         # 該当データを取得
         # 未着用でもデータは出力される   
@@ -78,6 +116,14 @@ class Fitbit:
         Args:
             redirect_uri (str): リダイレクト先のURI
         '''
+        # 引数の型確認
+        if type(redirect_uri) != str:
+            raise TypeError('"redirect_uri" type must be str.')
+
+        # 引数の文字列フォーマット確認
+        if not re.search(r'^http(|s)://.+$', redirect_uri):
+            raise ValueError('"redirect_uri" must be a uri format.')
+
         # access_tokenとrefresh_tokenの取得
         basic_user_and_pasword = base64.b64encode('{}:{}'.format(self.client_id, self.client_secret).encode('utf-8'))
         url = 'https://api.fitbit.com/oauth2/token'
@@ -143,6 +189,7 @@ class Fitbit:
             redirect_uri (str): リダイレクト先のURI
             path_config_ini (str): config.iniファイルのパス
         '''
+        # TODO: input関数を使用している場合のテストの書き方
         # client_idとclient_secretの更新
         if self.client_id == '':
             client_id = input('Enter client id of fitbit: ')
@@ -175,7 +222,27 @@ class Fitbit:
         webbrowser.open(url)
         self.auth_code = input('Enter authorization code (Excluding "#_=_"): ')
 
-    def export_config(self, path: str):
+    def export_config(self, path: str) -> None:
+        '''各インスタンス変数をiniファイルに出力する
+
+        Args:
+            path (str): 出力ファイルのパス名
+        '''
+        # 引数の型確認
+        if type(path) != str:
+            raise TypeError('"path" type must be str.')
+
+        # pathの末尾が.iniでない場合は処理を停止
+        if not re.search(r'^.+\.ini$', path):
+            raise ValueError('"path" must be an .ini file.')
+        
+        # 出力先のディレクトリが存在しない場合は処理を停止
+        if '/' in path:
+            dirpath = '/'.join(path.split('/')[:-1])
+            if not os.path.isdir(dirpath):
+                raise ValueError('no such directory')
+
+        # iniファイルへの書き込み
         SECTION = 'FITBIT'
         config_ini = configparser.ConfigParser()
         if os.path.isfile(path):

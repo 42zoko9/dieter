@@ -1,4 +1,4 @@
-from fetch_body_composition import fetch_body_composition
+from src.health_planet import export_body_composition_data
 from datetime import datetime
 import pytest
 import urllib
