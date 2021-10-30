@@ -1,5 +1,6 @@
 from google.cloud import storage
 
+
 def store_gcs(
     from_path: str,
     to_path: str,
@@ -14,10 +15,10 @@ def store_gcs(
     '''
     # If you don't specify credentials when constructing the client, the
     # client library will look for credentials in the environment.
+    # Error: google.auth.exceptions.DefaultCredentialsError
     storage_client = storage.Client()
 
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(to_path)
 
     blob.upload_from_filename(from_path)
-
