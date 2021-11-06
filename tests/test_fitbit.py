@@ -1,6 +1,7 @@
 import configparser
 import os
 import tempfile
+import urllib
 
 import pytest
 from src.fitbit import Fitbit
@@ -242,7 +243,11 @@ class TestUpdateTokens:
     def test_invalid_bad_auth_code(self):
         '''検証が正しくない: auth_codeが不正な値が与えられている
         '''
-        pass
+        # 実行・検証
+        fb = Fitbit()
+        fb.read_config(self.fake_ini.name)
+        with pytest.raises(urllib.error.HTTPError, match='HTTP Error 401: Unauthorized'):
+            fb.update_tokens()
 
     def test_valid(self):
         '''検証が正しい: access_tokenとrefresh_tokenの値が更新される
@@ -255,16 +260,39 @@ class TestRefreshAccessToken:
     '''refresh_tokenを用いた手続きよりaccess_tokenを再取得できるか検証
     - 異常系
         - refresh_tokenの値が期限切れもしくは謝っている
-    - 正常系: access_tokenが新しい値に更新される
+    - 正常系: access_tokenとrefresh_tokenが新しい値に更新される
     '''
+    def setup_method(self, method):
+        '''検証に使用するデータを生成する
+        '''
+        # 検証にパスするiniファイル作成
+        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
+        self.fake_ini.writelines([
+            '[FITBIT]\n',
+            'client_id = fake_client_id\n',
+            'client_secret = fake_client_secret\n',
+            'authorization_code = fake_auth_code\n',
+            'access_token = fake_access_token\n',
+            'refresh_token = fake_refresh_token\n'
+        ])
+        self.fake_ini.seek(0)
+
+    def teardown_method(self, method):
+        '''ダミーのiniファイル削除
+        '''
+        self.fake_ini.close()
 
     def test_invalid_bad_refresh_token(self):
         '''検証が正しくない: refresh_tokenが期限切れもしくは誤っている
         '''
-        pass
+        # 実行・検証
+        fb = Fitbit()
+        fb.read_config(self.fake_ini.name)
+        with pytest.raises(urllib.error.HTTPError, match='HTTP Error 401: Unauthorized'):
+            fb.refresh_access_token()
 
     def test_valid(self):
-        '''検証が正しい: access_tokenが新しい値に更新される
+        '''検証が正しい: access_tokenとrefresh_tokenが新しい値に更新される
         '''
         pass
 
@@ -367,8 +395,8 @@ class TestFetchTraceData:
         - categoryにて"activities", "foods", "sleep"以外の値が与えられる
         - dateに文字列以外の型が与えられる
         - dateが文字列であるが指定したフォーマットに従っていない
+        - access_tokenが期限切れ
     - 正常系
-        - access_tokenが不適切であった場合，refresh_tokenを介してデータを取得する
         - 指定した日にちの"activities"データを取得する
         - 指定した日にちの"foods"データを取得する
         - 指定した日にちの"sleep"データを取得する
@@ -445,16 +473,18 @@ class TestFetchTraceData:
         with pytest.raises(ValueError, match='"date" must be yyyy-mm-dd.'):
             fb.fetch_trace_data(fake_category, invalid_date)
 
-    def test_invalid_refresh_token_not_used(self):
-        '''検証が正しくない: refresh_tokenが機能せずaccess_tokenが更新できない
+    def test_invalid_access_token_is_expired(self):
+        '''検証が正しくない: access_tokenの期限切れ
         '''
-        pass
+        # 準備
+        fake_category = 'activities'
+        fake_date = '2021-09-25'
 
-    # NOTE: refresh_access_token()メソッドを実行することになるため，これは結合テストとなる？
-    def test_valid_access_token_not_used(self):
-        '''検証が正しい: access_tokenが不適切であった場合，refresh_tokenを介してデータを取得する
-        '''
-        pass
+        # 実行・検証
+        fb = Fitbit()
+        fb.read_config(self.fake_ini.name)
+        with pytest.raises(urllib.error.HTTPError, match='HTTP Error 401: Unauthorized'):
+            fb.fetch_trace_data(fake_category, fake_date)
 
     def test_valid_activities(self):
         '''検証が正しい: 指定した日にちの"activities"データを取得する

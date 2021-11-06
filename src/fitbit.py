@@ -85,24 +85,17 @@ class Fitbit:
             raise ValueError('"date" must be yyyy-mm-dd.')
 
         # 該当データを取得
+        headers = {'Authorization': 'Bearer ' + self.access_token}
+        url = 'https://api.fitbit.com/1.2/user/-/{category}/date/{date}.json'.format(
+            category=uri_category, date=date
+        )
+        req = urllib.request.Request(url, headers=headers)
         try:
-            headers = {'Authorization': 'Bearer ' + self.access_token}
-            url = 'https://api.fitbit.com/1.2/user/-/{category}/date/{date}.json'.format(
-                category=uri_category, date=date
-            )
-            req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req) as res:
                 body = res.read()
-        except urllib.error.HTTPError:
-            self.refresh_access_token()
-            print('refreshed acccess token')
-            headers = {'Authorization': 'Bearer ' + self.access_token}
-            url = 'https://api.fitbit.com/1.2/user/-/{category}/date/{date}.json'.format(
-                category=uri_category, date=date
-            )
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req) as res:
-                body = res.read()
+        except urllib.error.HTTPError as e:
+            print('Isnt the access token expired?  Try method "refresh_access_token".')
+            raise e
 
         # 辞書型で出力
         return json.loads(body.decode('utf-8'))
@@ -137,20 +130,19 @@ class Fitbit:
             'Authorization': 'Basic ' + basic_user_and_pasword.decode('utf-8'),
             'Content-Type': 'application/x-www-form-urlencoded',
         }
+        req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), headers=headers)
         try:
-            req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), headers=headers)
-        except Exception as e:
-            print(e)
-            print('Notice: the authorization code may have expired.')
-
-        with urllib.request.urlopen(req) as res:
-            body = res.read()
+            with urllib.request.urlopen(req) as res:
+                body = res.read()
+        except urllib.error.HTTPError as e:
+            print('Isnt the authorization code expired? Try method "update_authorization_code".')
+            raise e
         res_dict = eval(body.decode('utf-8'))
         self.access_token = res_dict['access_token']
         self.refresh_token = res_dict['refresh_token']
 
     def refresh_access_token(self) -> None:
-        '''refresh_token経由でaccess_tokenを再取得する
+        '''refresh_token経由でaccess_tokenとrefresh_tokenを更新する
         '''
         basic_user_and_pasword = base64.b64encode('{}:{}'.format(self.client_id, self.client_secret).encode('utf-8'))
         url = 'https://api.fitbit.com/oauth2/token'
@@ -162,18 +154,16 @@ class Fitbit:
             'Authorization': 'Basic ' + basic_user_and_pasword.decode('utf-8'),
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        try:
-            req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), headers=headers)
-        except Exception as e:
-            print(e)
+        req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), headers=headers)
         try:
             with urllib.request.urlopen(req) as res:
                 body = res.read()
-        except Exception as e:
-            print(e)
-            print('try method "fetch_tokens"')
+        except urllib.error.HTTPError as e:
+            print('Isnt the refresh token expired? Try method "update_authorization_code" & "update_tokens".')
+            raise e
         res_dict = eval(body.decode('utf-8'))
         self.access_token = res_dict['access_token']
+        self.refresh_token = res_dict['refresh_token']
 
     def update_authorization_code(
         self,
