@@ -95,3 +95,12 @@ class HealthPlanet:
         # if len(data) == 0:
         #     raise Exception('fetched data is empty')
         return data
+
+
+if __name__ == '__main__':
+    d = '2021-09-28'
+    ini_path = 'config.ini'
+    hp = HealthPlanet()
+    hp.read_config(ini_path)
+    result = hp.fetch_body_composition_data(d, d)[0]
+    print(result)
