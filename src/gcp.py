@@ -4,7 +4,7 @@ from google.cloud import storage
 def store_gcs(
     from_path: str,
     to_path: str,
-    bucket_name: str = 'exported_from_api'
+    bucket_name: str = 'exported_from_devices'
 ) -> None:
     '''from_pathのデータをGCS上の指定したバケットのto_pathへ格納する
 
