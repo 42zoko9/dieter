@@ -26,3 +26,4 @@ steps:
         "--trigger-event=google.pubsub.topic.publish",
         "--service-account=export-from-devices@dieter-329006.iam.gserviceaccount.com",
       ]
+logsBucket: "gs://export_from_devices/logs"
