@@ -11,8 +11,14 @@ from src.gcp import store_gcs
 from src.health_planet import HealthPlanet
 
 
+def main(event, context) -> None:
+    '''cloud functions上で実行
+    '''
+    run()
+
+
 def run() -> None:
-    '''実行日の前日の健康データを各APIから取得しgcsへ保存する
+    '''実行日の前日の健康データを各APIから取得しgcsへ保存する(ローカル環境で実行する場合はこちら)
     '''
     # 設定
     ini_path = 'config.ini'
@@ -44,7 +50,6 @@ def run() -> None:
         try:
             data = fb.fetch_trace_data(c, day_str)
         except urllib.error.HTTPError:
-            print(traceback.format_exc())
             fb.refresh_access_token()
             fb.export_config(ini_path)
             data = fb.fetch_trace_data(c, day_str)
