@@ -2,27 +2,27 @@ steps:
   # config.ini.enc から config.ini を復元
   - name: gcr.io/cloud-builders/gcloud
     args:
-    [
-       "kms",
-       "decrypt",
-       "--ciphertext-file=config.ini.enc",
-       "--plaintext-file=config.ini",
-       "--location=asia-northeast1 ",
-       "--keyring=export-from-devices",
-       "--key=api-infos",
-    ]
+      [
+        "kms",
+        "decrypt",
+        "--ciphertext-file=config.ini.enc",
+        "--plaintext-file=config.ini",
+        "--location=asia-northeast1",
+        "--keyring=export-from-devices",
+        "--key=api-infos",
+      ]
   # cloud functionsへのデプロイ
   - name: gcr.io/cloud-builders/gcloud
     args:
-    [
-       "functions",
-       "deploy",
-       "dieter",
-       "--entry-point=main",
-       "--region=asia-northeast1 ",
-       "--runtime=python38 ",
-       "--memory=128MB",
-       "--trigger-resource=function-scheduler-topics,
-       "--trigger-event=google.pubsub.topic.publish",
-       "--service-account=export-from-devices@dieter-329006.iam.gserviceaccount.com"
-    ]
+      [
+        "functions",
+        "deploy",
+        "dieter",
+        "--entry-point=main",
+        "--region=asia-northeast1 ",
+        "--runtime=python38 ",
+        "--memory=128MB",
+        "--trigger-resource=function-scheduler-topics",
+        "--trigger-event=google.pubsub.topic.publish",
+        "--service-account=export-from-devices@dieter-329006.iam.gserviceaccount.com",
+      ]
