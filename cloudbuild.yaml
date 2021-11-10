@@ -21,7 +21,7 @@ steps:
         "--entry-point=main",
         "--region=asia-northeast1",
         "--runtime=python38",
-        "--memory=128MB",
+        "--memory=256MB",
         "--trigger-resource=function-scheduler-topics",
         "--trigger-event=google.pubsub.topic.publish",
         "--service-account=export-from-devices@dieter-329006.iam.gserviceaccount.com",
