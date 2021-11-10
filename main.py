@@ -22,6 +22,7 @@ def run() -> None:
     '''
     # 設定
     GCP_PROJECT = os.getenv('GCP_PROJECT')
+    print('env: {}'.format('local' if GCP_PROJECT is None else 'GCP'))
     ini_path = 'config.ini'
     day = pd.Timestamp.today(tz='Asia/Tokyo') - DateOffset(days=1)
     day_str = day.strftime('%Y-%m-%d')
