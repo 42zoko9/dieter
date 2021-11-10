@@ -2,6 +2,7 @@ import json
 import os
 import traceback
 import urllib
+from typing import Union
 
 import pandas as pd
 from pandas.tseries.offsets import DateOffset
@@ -14,21 +15,24 @@ from src.health_planet import HealthPlanet
 def main(event, context) -> None:
     '''cloud functions上で実行
     '''
-    run()
+    GCP_PROJECT = os.getenv('GCP_PROJECT')
+    run(GCP_PROJECT)
 
 
-def run() -> None:
+def run(prj: Union[None, str] = None) -> None:
     '''実行日の前日の健康データを各APIから取得しgcsへ保存する(ローカル環境で実行する場合はこちら)
+
+    Args:
+        prj (Union[None, str], optional): 関数を実行する環境. Defaults to None.
     '''
     # 設定
-    GCP_PROJECT = os.getenv('GCP_PROJECT')
-    print('env: {}'.format('local' if GCP_PROJECT is None else 'GCP'))
+    print('project env: {}'.format('local' if prj is None else 'GCP'))
     ini_path = 'config.ini'
     day = pd.Timestamp.today(tz='Asia/Tokyo') - DateOffset(days=1)
     day_str = day.strftime('%Y-%m-%d')
 
     # 一時的にファイルを保存するディレクトリを用意(cloud functions限定)
-    if GCP_PROJECT is not None:
+    if prj is not None:
         os.makedirs('/tmp/data/health_planet/', exist_ok=True)
         os.makedirs('/tmp/data/fitbit/activities/', exist_ok=True)
         os.makedirs('/tmp/data/fitbit/foods/', exist_ok=True)
@@ -40,7 +44,7 @@ def run() -> None:
     body_compositions = hp.fetch_body_composition_data(day_str, day_str)
 
     # 体組成データを保存
-    hp_path = ('' if GCP_PROJECT is None else '/tmp/') + 'data/health_planet/{}.json'.format(day_str)
+    hp_path = ('' if prj is None else '/tmp/') + 'data/health_planet/{}.json'.format(day_str)
     with open(hp_path, 'w') as jsonfile:
         jsonfile.write(json.dumps(body_compositions))
 
@@ -64,7 +68,7 @@ def run() -> None:
             data = fb.fetch_trace_data(c, day_str)
 
         # 保存
-        fb_path = ('' if GCP_PROJECT is None else '/tmp/') + 'data/fitbit/{}/{}.json'.format(c, day_str)
+        fb_path = ('' if prj is None else '/tmp/') + 'data/fitbit/{}/{}.json'.format(c, day_str)
         with open(fb_path, 'w') as jsonfile:
             jsonfile.write(json.dumps(data))
 
