@@ -10,7 +10,7 @@ def store_gcs(
 
     Args:
         from_path (str): 転送元のデータのパス
-        to_path (str): 転送先のディレクトリのまでのパス
+        to_path (str): 転送先のパス
         bucket_name (str, optional): バケット名. Defaults to 'exported_from_api'.
     '''
     # If you don't specify credentials when constructing the client, the

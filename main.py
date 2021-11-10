@@ -51,7 +51,7 @@ def run(prj: Union[None, str] = None) -> None:
 
     # 体組成データをgcsへ転送
     try:
-        store_gcs(hp_path, 'health_planet/')
+        store_gcs(hp_path, 'health_planet/{}.json'.format(day_str))
         os.remove(hp_path)
     except Exception:
         print(traceback.format_exc())
@@ -74,7 +74,7 @@ def run(prj: Union[None, str] = None) -> None:
             jsonfile.write(json.dumps(data))
 
         # 転送
-        fb_gcs_path = 'fitbit/{}/'.format(c)
+        fb_gcs_path = 'fitbit/{}/{}.json'.format(c, day_str)
         try:
             store_gcs(fb_path, fb_gcs_path)
             os.remove(fb_path)
