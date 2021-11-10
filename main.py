@@ -21,9 +21,17 @@ def run() -> None:
     '''実行日の前日の健康データを各APIから取得しgcsへ保存する(ローカル環境で実行する場合はこちら)
     '''
     # 設定
+    GCP_PROJECT = os.getenv('GCP_PROJECT')
     ini_path = 'config.ini'
     day = pd.Timestamp.today(tz='Asia/Tokyo') - DateOffset(days=1)
     day_str = day.strftime('%Y-%m-%d')
+
+    # 一時的にファイルを保存するディレクトリを用意(cloud functions限定)
+    if GCP_PROJECT is not None:
+        os.makedirs('/tmp/data/health_planet/', exist_ok=True)
+        os.makedirs('/tmp/data/fitbit/activities/', exist_ok=True)
+        os.makedirs('/tmp/data/fitbit/foods/', exist_ok=True)
+        os.makedirs('/tmp/data/fitbit/sleep/', exist_ok=True)
 
     # Health Planetから体組成データを取得
     hp = HealthPlanet()
@@ -31,7 +39,7 @@ def run() -> None:
     body_compositions = hp.fetch_body_composition_data(day_str, day_str)
 
     # 体組成データを保存
-    hp_path = 'data/health_planet/{}.json'.format(day_str)
+    hp_path = ('' if GCP_PROJECT is None else '/tmp/') + 'data/health_planet/{}.json'.format(day_str)
     with open(hp_path, 'w') as jsonfile:
         jsonfile.write(json.dumps(body_compositions))
 
@@ -55,7 +63,7 @@ def run() -> None:
             data = fb.fetch_trace_data(c, day_str)
 
         # 保存
-        fb_path = 'data/fitbit/{}/{}.json'.format(c, day_str)
+        fb_path = ('' if GCP_PROJECT is None else '/tmp/') + 'data/fitbit/{}/{}.json'.format(c, day_str)
         with open(fb_path, 'w') as jsonfile:
             jsonfile.write(json.dumps(data))
 
