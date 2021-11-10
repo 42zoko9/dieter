@@ -15,7 +15,8 @@ from src.health_planet import HealthPlanet
 def main(event, context) -> None:
     '''cloud functions上で実行
     '''
-    GCP_PROJECT = os.getenv('GCP_PROJECT')
+    # GCP_PROJECT = os.getenv('GCP_PROJECT') <- python3.7のみ
+    GCP_PROJECT = 'dieter-329006'
     run(GCP_PROJECT)
 
 
