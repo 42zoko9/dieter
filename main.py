@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import traceback
 import urllib
 from typing import Union
@@ -28,6 +29,7 @@ def run(prj: Union[None, str] = None) -> None:
     '''
     # 設定
     print('project env: {}'.format('local' if prj is None else 'GCP'))
+    additional_path = '' if prj is None else '/tmp/'
     ini_path = 'config.ini'
     day = pd.Timestamp.today(tz='Asia/Tokyo') - DateOffset(days=1)
     day_str = day.strftime('%Y-%m-%d')
@@ -45,7 +47,7 @@ def run(prj: Union[None, str] = None) -> None:
     body_compositions = hp.fetch_body_composition_data(day_str, day_str)
 
     # 体組成データを保存
-    hp_path = ('' if prj is None else '/tmp/') + 'data/health_planet/{}.json'.format(day_str)
+    hp_path = additional_path + 'data/health_planet/{}.json'.format(day_str)
     with open(hp_path, 'w') as jsonfile:
         jsonfile.write(json.dumps(body_compositions))
 
@@ -65,11 +67,15 @@ def run(prj: Union[None, str] = None) -> None:
             data = fb.fetch_trace_data(c, day_str)
         except urllib.error.HTTPError:
             fb.refresh_access_token()
-            fb.export_config(ini_path)
+            fb.export_config(additional_path + ini_path)
+            if prj is not None:
+                # cloud function実行時に更新・出力したAPI接続情報をrootに再配置する
+                os.remove(ini_path)
+                shutil.move(additional_path + ini_path, __file__)
             data = fb.fetch_trace_data(c, day_str)
 
         # 保存
-        fb_path = ('' if prj is None else '/tmp/') + 'data/fitbit/{}/{}.json'.format(c, day_str)
+        fb_path = additional_path + 'data/fitbit/{}/{}.json'.format(c, day_str)
         with open(fb_path, 'w') as jsonfile:
             jsonfile.write(json.dumps(data))
 
