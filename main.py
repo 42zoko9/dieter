@@ -70,7 +70,9 @@ def run(prj: Union[None, str] = None) -> None:
             fb.export_config(additional_path + ini_path)
             if prj is not None:
                 # cloud function実行時に更新・出力したAPI接続情報をrootに再配置する
-                os.remove(ini_path)
+                # /tmp以外のフォルダではファイル削除できないため移動を挟む
+                shutil.move(ini_path, additional_path + ini_path)
+                os.remove(additional_path + ini_path)
                 shutil.move(additional_path + ini_path, __file__)
             data = fb.fetch_trace_data(c, day_str)
 
