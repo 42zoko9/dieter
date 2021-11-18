@@ -163,7 +163,6 @@ class Fitbit:
             raise e
         res_dict = eval(body.decode('utf-8'))
         self.access_token = res_dict['access_token']
-        self.refresh_token = res_dict['refresh_token']
 
     def update_authorization_code(
         self,

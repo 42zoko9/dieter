@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 import traceback
 import urllib
 from typing import Union
@@ -25,7 +24,7 @@ def run(prj: Union[None, str] = None) -> None:
     '''実行日の前日の健康データを各APIから取得しgcsへ保存する(ローカル環境で実行する場合はこちら)
 
     Args:
-        prj (Union[None, str], optional): 関数を実行する環境. Defaults to None.
+        prj (Union[None, str], optional): 関数を実行する環境，未入力(None)ならばローカルとする.
     '''
     # 設定
     print('project env: {}'.format('local' if prj is None else 'GCP'))
@@ -66,14 +65,11 @@ def run(prj: Union[None, str] = None) -> None:
         try:
             data = fb.fetch_trace_data(c, day_str)
         except urllib.error.HTTPError:
+            print('execute method "refresh_access_token"')
             fb.refresh_access_token()
-            fb.export_config(additional_path + ini_path)
-            if prj is not None:
-                # cloud function実行時に更新・出力したAPI接続情報をrootに再配置する
-                # /tmp以外のフォルダではファイル削除できないため移動を挟む
-                shutil.move(ini_path, additional_path + ini_path)
-                os.remove(additional_path + ini_path)
-                shutil.move(additional_path + ini_path, __file__)
+            if prj is None:
+                # 実行環境がローカルであればiniファイルを上書き
+                fb.export_config(ini_path)
             data = fb.fetch_trace_data(c, day_str)
 
         # 保存
