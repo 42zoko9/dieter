@@ -16,7 +16,7 @@ class TestFetchBodyCompositionData:
 
     '''
     def setup_method(self, method):
-        '''検証に使用するデータを生成する
+        '''検証に使用するダミーのアクセストークン を設定
         '''
         self.fake_access_token = 'fake_access_token'
         self.bad_access_token = 'bad_access_token'
