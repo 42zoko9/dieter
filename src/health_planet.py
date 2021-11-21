@@ -1,6 +1,4 @@
-import configparser
 import json
-import os
 import re
 import urllib.parse
 import urllib.request
@@ -13,32 +11,7 @@ from pandas.tseries.offsets import DateOffset
 
 @dataclass
 class HealthPlanet:
-    access_token: str = ''
-
-    def read_config(self, path: str) -> None:
-        '''HEALTH PLANET周りの環境変数が記述されたiniファイルを読み込み各インスタンス変数に代入する
-
-        Args:
-            path (str): 読み込むiniファイルのパス
-        '''
-        # 引数dateの型確認
-        if type(path) != str:
-            raise TypeError('"path" type must be str.')
-
-        # pathの末尾が.iniでない場合は処理を停止
-        if not re.search(r'^.+\.ini$', path):
-            raise ValueError('"path" must be an .ini file.')
-
-        # 出力先のディレクトリが存在しない場合は処理を停止
-        if '/' in path:
-            dirpath = '/'.join(path.split('/')[:-1])
-            if not os.path.isdir(dirpath):
-                raise ValueError('no such directory')
-
-        # 実行
-        config_ini = configparser.ConfigParser()
-        config_ini.read(path, encoding='utf-8')
-        self.access_token = config_ini.get('HEALTH PLANET', 'access_token')
+    access_token: str
 
     def fetch_body_composition_data(self, from_date: str, to_date: str) -> Dict[Any, Any]:
         '''体重と体脂肪率を取得し辞書型で取得する
@@ -98,9 +71,14 @@ class HealthPlanet:
 
 
 if __name__ == '__main__':
+    import configparser
+
+    ini_path = 'local.ini'
+    config_ini = configparser.ConfigParser()
+    config_ini.read(ini_path, encoding='utf-8')
+    access_token = config_ini.get('HEALTH PLANET', 'access_token')
+
     d = '2021-09-28'
-    ini_path = 'config.ini'
-    hp = HealthPlanet()
-    hp.read_config(ini_path)
+    hp = HealthPlanet(access_token)
     result = hp.fetch_body_composition_data(d, d)[0]
     print(result)

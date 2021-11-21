@@ -1,96 +1,5 @@
-import configparser
-import tempfile
-
 import pytest
 from src.health_planet import HealthPlanet
-
-
-class TestReadConfig:
-    '''iniファイルからaccess_tokenを読み込めるか検証する
-    - 異常系
-        - pathが文字列以外の型で与えられる
-        - 存在しないpathを指定している
-        - 存在するファイルではあるがiniファイルではない
-        - 読み込んだiniファイルのoptionに不正な名前が与えられている
-    - 正常系: iniファイルに記載された値が各インスタンス変数に格納される
-    '''
-    def setup_method(self, method):
-        '''検証に使用するデータを生成する
-        '''
-        # 検証にパスするiniファイル作成
-        self.valid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.valid_ini.writelines([
-            '[HEALTH PLANET]\n',
-            'access_token = fake_access_token'
-        ])
-        self.valid_ini.seek(0)
-
-        # 検証をパスしないiniファイル作成
-        self.invalid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.invalid_ini.writelines([
-            '[HEALTH PLANET]\n',
-            'invalid_access_token = fake_access_token'
-        ])
-        self.invalid_ini.seek(0)
-
-    def teardown_method(self, method):
-        '''ダミーのiniファイル削除
-        '''
-        self.valid_ini.close()
-        self.invalid_ini.close()
-
-    def test_invalid_path_not_string(self):
-        '''検証が正しくない: pathが文字列以外の型で与えられる
-        '''
-        # 準備
-        invalid_path = 71
-
-        # 実行・検証
-        hp = HealthPlanet()
-        with pytest.raises(TypeError, match='"path" type must be str.'):
-            hp.read_config(invalid_path)
-
-    def test_invalid_path_not_found(self):
-        '''検証が正しくない: 存在しないpathを指定している
-        '''
-        # 準備
-        invalid_path = './data/fake_dir/config.ini'
-
-        # 実行・検証
-        hp = HealthPlanet()
-        with pytest.raises(ValueError, match='no such directory'):
-            hp.read_config(invalid_path)
-
-    def test_invalid_path_not_ini_file(self):
-        '''検証が正しくない: 存在するファイルではあるがiniファイルではない
-        '''
-        # 準備
-        not_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.yml', dir='./data')
-        not_ini.seek(0)
-
-        # 実行・検証
-        hp = HealthPlanet()
-        with pytest.raises(ValueError, match='"path" must be an .ini file.'):
-            hp.read_config(not_ini.name)
-        not_ini.close()
-
-    def test_invalid_bad_ini(self):
-        '''検証が正しくない: 読み込んだiniファイルのoptionに不正な名前が与えられている
-        '''
-        # 実行・検証
-        hp = HealthPlanet()
-        with pytest.raises(configparser.NoOptionError):
-            hp.read_config(self.invalid_ini.name)
-
-    def test_valid(self):
-        '''検証が正しい: iniファイルに記載された値が各インスタンス変数に格納される
-        '''
-        # 実行
-        hp = HealthPlanet()
-        hp.read_config(self.valid_ini.name)
-
-        # 検証
-        assert hp.access_token == 'fake_access_token'
 
 
 class TestFetchBodyCompositionData:
@@ -104,33 +13,13 @@ class TestFetchBodyCompositionData:
         - from_dateに現時点より3ヶ月前の日付が与えられている
         - access_tokenが不適切
     - 正常系: 体組成データを取得する
-        - 指定した期間内のデータが含まれている
-        - データが空
+
     '''
     def setup_method(self, method):
         '''検証に使用するデータを生成する
         '''
-        # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.fake_ini.writelines([
-            '[HEALTH PLANET]\n',
-            'access_token = fake_access_token'
-        ])
-        self.fake_ini.seek(0)
-
-        # 検証をパスしないiniファイル作成
-        self.fake_bad_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.fake_bad_ini.writelines([
-            '[HEALTH PLANET]\n',
-            'invalid_access_token = fake_access_token'
-        ])
-        self.fake_bad_ini.seek(0)
-
-    def teardown_method(self, method):
-        '''ダミーのiniファイル削除
-        '''
-        self.fake_ini.close()
-        self.fake_bad_ini.close()
+        self.fake_access_token = 'fake_access_token'
+        self.bad_access_token = 'bad_access_token'
 
     def test_invalid_from_date_not_string(self):
         '''from_dateに文字列以外の型が与えられる
@@ -140,8 +29,7 @@ class TestFetchBodyCompositionData:
         fake_to_date = '2021-09-25'
 
         # 実行・検証
-        hp = HealthPlanet()
-        hp.read_config(self.fake_ini.name)
+        hp = HealthPlanet(self.fake_access_token)
         with pytest.raises(TypeError, match='"from_date" type must be str.'):
             hp.fetch_body_composition_data(invalid_from_date, fake_to_date)
 
@@ -153,8 +41,7 @@ class TestFetchBodyCompositionData:
         fake_to_date = '2021-09-25'
 
         # 実行・検証
-        hp = HealthPlanet()
-        hp.read_config(self.fake_ini.name)
+        hp = HealthPlanet(self.fake_access_token)
         with pytest.raises(ValueError, match='"from_date" must be yyyy-mm-dd.'):
             hp.fetch_body_composition_data(invalid_from_date, fake_to_date)
 
@@ -166,8 +53,7 @@ class TestFetchBodyCompositionData:
         invalid_to_date = 20210925
 
         # 実行・検証
-        hp = HealthPlanet()
-        hp.read_config(self.fake_ini.name)
+        hp = HealthPlanet(self.fake_access_token)
         with pytest.raises(TypeError, match='"to_date" type must be str.'):
             hp.fetch_body_composition_data(fake_from_date, invalid_to_date)
 
@@ -179,8 +65,7 @@ class TestFetchBodyCompositionData:
         invalid_to_date = '20210925'
 
         # 実行・検証
-        hp = HealthPlanet()
-        hp.read_config(self.fake_ini.name)
+        hp = HealthPlanet(self.fake_access_token)
         with pytest.raises(ValueError, match='"to_date" must be yyyy-mm-dd.'):
             hp.fetch_body_composition_data(fake_from_date, invalid_to_date)
 
@@ -192,8 +77,7 @@ class TestFetchBodyCompositionData:
         fake_to_date = '2021-09-25'
 
         # 実行・検証
-        hp = HealthPlanet()
-        hp.read_config(self.fake_ini.name)
+        hp = HealthPlanet(self.fake_access_token)
         with pytest.raises(ValueError, match='"to_date" is greater than "from_date".'):
             hp.fetch_body_composition_data(invalid_from_date, fake_to_date)
 
@@ -205,8 +89,7 @@ class TestFetchBodyCompositionData:
         fake_to_date = '2021-09-25'
 
         # 実行・検証
-        hp = HealthPlanet()
-        hp.read_config(self.fake_ini.name)
+        hp = HealthPlanet(self.fake_access_token)
         with pytest.raises(ValueError, match='"from_date" is over 3 month ago.'):
             hp.fetch_body_composition_data(invalid_from_date, fake_to_date)
 
@@ -219,28 +102,13 @@ class TestFetchBodyCompositionData:
 
     # TODO: mockの作成方法
     @pytest.mark.skip('mockが作成できていないため')
-    def test_valid_contained_data(self):
-        '''[summary]
+    def test_valid(self):
+        '''検証が正しい: 体組成データを取得する
         '''
         # 準備
         fake_from_date = '2021-09-28'
         fake_to_date = '2021-09-28'
 
         # 実行
-        hp = HealthPlanet()
-        hp.read_config(self.fake_ini.name)
-        hp.fetch_body_composition_data(fake_from_date, fake_to_date)
-
-    # TODO: mockの作成方法
-    @pytest.mark.skip('mockが作成できていないため')
-    def test_valid_empty_data(self):
-        '''[summary]
-        '''
-        # 準備
-        fake_from_date = '2021-09-29'
-        fake_to_date = '2021-09-29'
-
-        # 実行
-        hp = HealthPlanet()
-        hp.read_config(self.fake_ini.name)
+        hp = HealthPlanet(self.fake_access_token)
         hp.fetch_body_composition_data(fake_from_date, fake_to_date)
