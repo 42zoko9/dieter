@@ -17,6 +17,7 @@ tox = "^3.24.0"
 google-cloud-storage = "^1.42.3"
 freezegun = "^1.1.0"
 requests-mock = "^1.9.3"
+google-cloud-secret-manager = "^2.8.0"
 
 [tool.poetry.dev-dependencies]
 
