@@ -47,16 +47,16 @@ def run(prj: Union[None, str] = None) -> None:
         config_ini = configparser.ConfigParser()
         config_ini.read(ini_path, encoding='utf-8')
         api_connect_values = {
-            'hp-access-token': config_ini.get('HEALTH PLANET', 'access_token'),
-            'fb-client-id': config_ini.get('FITBIT', 'client_id'),
-            'fb-client-secret': config_ini.get('FITBIT', 'client_secret'),
-            'fb-access-token': config_ini.get('FITBIT', 'access_token'),
-            'fb-refresh-token': config_ini.get('FITBIT', 'refresh_token')
+            'hp-access-token': config_ini.get('HEALTH PLANET', 'access-token'),
+            'fb-client-id': config_ini.get('FITBIT', 'client-id'),
+            'fb-client-secret': config_ini.get('FITBIT', 'client-secret'),
+            'fb-access-token': config_ini.get('FITBIT', 'access-token'),
+            'fb-refresh-token': config_ini.get('FITBIT', 'refresh-token')
         }
     else:
         secret_manager_client = secretmanager.SecretManagerServiceClient()
         api_connect_values = {}
-        for k in ['hp-access-token', 'fb-client-id', 'fb-clietn-secret', 'fb-access-token', 'fb-refresh-token']:
+        for k in ['hp-access-token', 'fb-client-id', 'fb-client-secret', 'fb-access-token', 'fb-refresh-token']:
             name = secret_manager_client.secret_version_path(prj, k, 'latest')
             response = secret_manager_client.access_secret_version(request={'name': name})
             api_connect_values[k] = response.payload.data.decode('utf-8')
@@ -95,8 +95,8 @@ def run(prj: Union[None, str] = None) -> None:
             fb.refresh_access_token()
             if prj is None:
                 # 実行環境がローカルであればiniファイルを上書き
-                config_ini.set('FITBIT', 'access_token', fb.access_token)
-                config_ini.set('FITBIT', 'refresh_token', fb.refresh_token)
+                config_ini.set('FITBIT', 'access-token', fb.access_token)
+                config_ini.set('FITBIT', 'refresh-token', fb.refresh_token)
                 with open(ini_path, 'w') as f:
                     config_ini.write(f)
             else:
