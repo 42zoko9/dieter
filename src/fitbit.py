@@ -183,23 +183,37 @@ class Fitbit:
 
 
 if __name__ == '__main__':
+    # 以下，ローカル環境で動作検証時に使用
     import configparser
 
     path = 'local.ini'
     config_ini = configparser.ConfigParser()
     config_ini.read(path, encoding='utf-8')
-    client_id = config_ini.get('FITBIT', 'client_id')
-    client_secret = config_ini.get('FITBIT', 'client_secret')
+    client_id = config_ini.get('FITBIT', 'client-id')
+    client_secret = config_ini.get('FITBIT', 'client-secret')
+    access_token = config_ini.get('FITBIT', 'access-token')
+    refresh_token = config_ini.get('FITBIT', 'refresh-token')
 
     t = '2021-09-25'
-    fb = Fitbit(client_id=client_id, client_secret=client_secret)
-    fb.fetch_authorization_code()
-    fb.fetch_tokens()
-    config_ini.set('FITBIT', 'access_token', fb.access_token)
-    config_ini.set('FITBIT', 'refresh_token', fb.refresh_token)
-    with open(path, 'w') as f:
-        config_ini.write(f)
-
-    activities = fb.fetch_trace_data('activities', t)
-    foods = fb.fetch_trace_data('foods', t)
-    sleep = fb.fetch_trace_data('sleep', t)
+    fb = Fitbit(
+        client_id=client_id,
+        client_secret=client_secret,
+        access_token=access_token,
+        refresh_token=refresh_token
+    )
+    for ctg in ['activities', 'foods', 'sleep']:
+        try:
+            result = fb.fetch_trace_data(ctg, t)
+            print('success: {}'.format(ctg))
+        except urllib.error.HTTPError:
+            try:
+                fb.refresh_access_token()
+            except urllib.error.HTTPError:
+                fb.fetch_authorization_code()
+                fb.fetch_tokens()
+            config_ini.set('FITBIT', 'access-token', fb.access_token)
+            config_ini.set('FITBIT', 'refresh-token', fb.refresh_token)
+            with open(path, 'w') as f:
+                config_ini.write(f)
+            result = fb.fetch_trace_data(ctg, t)
+            print('success: {}'.format(ctg))

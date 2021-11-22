@@ -71,12 +71,13 @@ class HealthPlanet:
 
 
 if __name__ == '__main__':
+    # 以下，ローカル環境で動作検証時に使用
     import configparser
 
     ini_path = 'local.ini'
     config_ini = configparser.ConfigParser()
     config_ini.read(ini_path, encoding='utf-8')
-    access_token = config_ini.get('HEALTH PLANET', 'access_token')
+    access_token = config_ini.get('HEALTH PLANET', 'access-token')
 
     d = '2021-09-28'
     hp = HealthPlanet(access_token)
