@@ -1,16 +1,4 @@
 steps:
-  # config.ini.enc から config.ini を復元
-  - name: gcr.io/cloud-builders/gcloud
-    args:
-      [
-        "kms",
-        "decrypt",
-        "--ciphertext-file=config.ini.enc",
-        "--plaintext-file=config.ini",
-        "--location=asia-northeast1",
-        "--keyring=export-from-devices",
-        "--key=api-infos",
-      ]
   # cloud functionsへのデプロイ
   - name: gcr.io/cloud-builders/gcloud
     args:
