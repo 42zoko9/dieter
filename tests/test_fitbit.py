@@ -1,114 +1,11 @@
-import configparser
-import os
-import tempfile
 import urllib
 
 import pytest
 from src.fitbit import Fitbit
 
 
-class TestReadConfig:
-    '''read_configメソッドのテスト
-    - 異常系
-        - pathが文字列以外の型で与えられる
-        - 存在しないpathを指定している
-        - 存在するファイルではあるがiniファイルではない
-        - 読み込んだiniファイルのoptionに不正な名前が与えられている
-    - 正常系: iniファイルに記載された値が各インスタンス変数に格納される
-    '''
-    def setup_method(self, method):
-        '''検証に使用するデータを生成する
-        '''
-        # 検証にパスするiniファイル作成
-        self.valid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.valid_ini.writelines([
-            '[FITBIT]\n',
-            'client_id = fake_client_id\n',
-            'client_secret = fake_client_secret\n',
-            'authorization_code = fake_auth_code\n',
-            'access_token = fake_access_token\n',
-            'refresh_token = fake_refresh_token\n'
-        ])
-        self.valid_ini.seek(0)
-
-        # 検証をパスしないiniファイル作成
-        self.invalid_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.invalid_ini.writelines([
-            '[FITBIT]\n',
-            'client_id = invalid_fake_client_id\n',
-            'client_secret = invalid_fake_client_secret\n',
-            'auth = invalid_fake_auth_code\n',
-            'access_token = invalid_fake_access_token\n',
-            'refresh_token = invalid_fake_refresh_token\n'
-        ])
-        self.invalid_ini.seek(0)
-
-    def teardown_method(self, method):
-        '''ダミーのiniファイル削除
-        '''
-        self.valid_ini.close()
-        self.invalid_ini.close()
-
-    def test_invalid_path_not_string(self):
-        '''検証が正しくない: pathが文字列以外の型で与えられる
-        '''
-        # 準備
-        invalid_path = 71
-
-        # 実行・検証
-        fb = Fitbit()
-        with pytest.raises(TypeError, match='"path" type must be str.'):
-            fb.read_config(invalid_path)
-
-    def test_invalid_path_not_found(self):
-        '''検証が正しくない: 存在しないpathを指定している
-        '''
-        # 準備
-        invalid_path = './data/fake_dir/config.ini'
-
-        # 実行・検証
-        fb = Fitbit()
-        with pytest.raises(ValueError, match='no such directory'):
-            fb.read_config(invalid_path)
-
-    def test_invalid_path_not_ini_file(self):
-        '''検証が正しくない: 存在するファイルではあるがiniファイルではない
-        '''
-        # 準備
-        not_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.yml', dir='./data')
-        not_ini.seek(0)
-
-        # 実行・検証
-        fb = Fitbit()
-        with pytest.raises(ValueError, match='"path" must be an .ini file.'):
-            fb.read_config(not_ini.name)
-        not_ini.close()
-
-    def test_invalid_bad_ini(self):
-        '''検証が正しくない: 読み込んだiniファイルのoptionに不正な名前が与えられている
-        '''
-        # 実行・検証
-        fb = Fitbit()
-        with pytest.raises(configparser.NoOptionError):
-            fb.read_config(self.invalid_ini.name)
-
-    def test_valid(self):
-        '''検証が正しい: iniファイルに記載された値が各インスタンス変数に格納される
-        '''
-        # 実行
-        fb = Fitbit()
-        fb.read_config(self.valid_ini.name)
-
-        # 検証
-        assert fb.client_id == 'fake_client_id'
-        assert fb.client_secret == 'fake_client_secret'
-        assert fb.auth_code == 'fake_auth_code'
-        assert fb.access_token == 'fake_access_token'
-        assert fb.refresh_token == 'fake_refresh_token'
-
-
-# TODO: input()やwebbrowser.open()を含む処理のテストの書き方
-class TestUpdateAuthorizationCode:
+@pytest.mark.skip('input()やwebbrowser.open()を含む処理のテストの書き方')
+class TestFetchAuthorizationCode:
     '''authorization codeを取得できるかテストする
     - 異常系
         - scopeがlist以外で与えられている
@@ -122,24 +19,10 @@ class TestUpdateAuthorizationCode:
     - 正常系: `auth_code`に取得したURIに付与された値が格納される
     '''
     def setup_method(self, method):
-        '''検証に使用するデータを生成する
+        '''検証に使用するダミーのclientIdとclientSecretを用意する
         '''
-        # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.fake_ini.writelines([
-            '[FITBIT]\n',
-            'client_id = fake_client_id\n',
-            'client_secret = fake_client_secret\n',
-            'authorization_code = fake_auth_code\n',
-            'access_token = fake_access_token\n',
-            'refresh_token = fake_refresh_token\n'
-        ])
-        self.fake_ini.seek(0)
-
-    def teardown_method(self, method):
-        '''ダミーのiniファイル削除
-        '''
-        self.fake_ini.close()
+        self.fake_client_id = 'fake_client_id'
+        self.fake_client_secret = 'fake_client_secret'
 
     def test_invalid_scope_not_list(self):
         '''検証が正しくない: scopeがlist以外で与えられている
@@ -188,7 +71,7 @@ class TestUpdateAuthorizationCode:
 
 
 # TODO: authorization_codeが不正の場合にErrorを返すmockの作成方法
-class TestUpdateTokens:
+class TestFetchTokens:
     '''access_tokenとrefresh_tokenを取得し更新できるかを検証
     - 異常系
         - redirect_uriが文字列以外の型で与えられる
@@ -197,24 +80,11 @@ class TestUpdateTokens:
     - 正常系: access_tokenとrefresh_tokenの値が更新される
     '''
     def setup_method(self, method):
-        '''検証に使用するデータを生成する
+        '''検証に使用するダミーのclientIdとclientSecret, authorizationCodeを用意する
         '''
-        # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.fake_ini.writelines([
-            '[FITBIT]\n',
-            'client_id = fake_client_id\n',
-            'client_secret = fake_client_secret\n',
-            'authorization_code = fake_auth_code\n',
-            'access_token = \n',
-            'refresh_token = \n'
-        ])
-        self.fake_ini.seek(0)
-
-    def teardown_method(self, method):
-        '''ダミーのiniファイル削除
-        '''
-        self.fake_ini.close()
+        self.fake_client_id = 'fake_client_id'
+        self.fake_client_secret = 'fake_client_secret'
+        self.fake_auth_code = 'fake_auth_code'
 
     def test_invalid_redirect_uri_not_string(self):
         '''検証が正しくない: redirect_uriが文字列以外で与えられている
@@ -223,10 +93,13 @@ class TestUpdateTokens:
         invalid_redirect_uri = int(71)
 
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            auth_code=self.fake_auth_code
+        )
         with pytest.raises(TypeError, match='"redirect_uri" type must be str.'):
-            fb.update_tokens(invalid_redirect_uri)
+            fb.fetch_tokens(invalid_redirect_uri)
 
     def test_invalid_redirect_uri_not_uri_format(self):
         '''検証が正しくない: redirect_uriがuriのフォーマットに従っていない
@@ -235,20 +108,27 @@ class TestUpdateTokens:
         invalid_redirect_uri = 'not_uri_format_string'
 
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            auth_code=self.fake_auth_code
+        )
         with pytest.raises(ValueError, match='"redirect_uri" must be a uri format.'):
-            fb.update_tokens(invalid_redirect_uri)
+            fb.fetch_tokens(invalid_redirect_uri)
 
     def test_invalid_bad_auth_code(self):
         '''検証が正しくない: auth_codeが不正な値が与えられている
         '''
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            auth_code=self.fake_auth_code
+        )
         with pytest.raises(urllib.error.HTTPError, match='HTTP Error 401: Unauthorized'):
-            fb.update_tokens()
+            fb.fetch_tokens()
 
+    @pytest.mark.skip('mockが作成できていないため')
     def test_valid(self):
         '''検証が正しい: access_tokenとrefresh_tokenの値が更新される
         '''
@@ -259,132 +139,35 @@ class TestUpdateTokens:
 class TestRefreshAccessToken:
     '''refresh_tokenを用いた手続きよりaccess_tokenを再取得できるか検証
     - 異常系
-        - refresh_tokenの値が期限切れもしくは謝っている
+        - refresh_tokenの値が期限切れもしくは誤っている
     - 正常系: access_tokenとrefresh_tokenが新しい値に更新される
     '''
     def setup_method(self, method):
-        '''検証に使用するデータを生成する
+        '''検証に使用するダミーのclientIdとclientSecret, refreshTokenを用意する
         '''
-        # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.fake_ini.writelines([
-            '[FITBIT]\n',
-            'client_id = fake_client_id\n',
-            'client_secret = fake_client_secret\n',
-            'authorization_code = fake_auth_code\n',
-            'access_token = fake_access_token\n',
-            'refresh_token = fake_refresh_token\n'
-        ])
-        self.fake_ini.seek(0)
-
-    def teardown_method(self, method):
-        '''ダミーのiniファイル削除
-        '''
-        self.fake_ini.close()
+        self.fake_client_id = 'fake_client_id'
+        self.fake_client_secret = 'fake_client_secret'
+        self.bad_access_token = 'bad_access_token'
+        self.fake_refresh_token = 'fake_refresh_token'
 
     def test_invalid_bad_refresh_token(self):
         '''検証が正しくない: refresh_tokenが期限切れもしくは誤っている
         '''
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            access_token=self.bad_access_token,
+            refresh_token=self.fake_refresh_token
+        )
         with pytest.raises(urllib.error.HTTPError, match='HTTP Error 401: Unauthorized'):
             fb.refresh_access_token()
 
+    @pytest.mark.skip('mockが作成できていないため')
     def test_valid(self):
         '''検証が正しい: access_tokenとrefresh_tokenが新しい値に更新される
         '''
         pass
-
-
-# TODO: 外部に結果を出力する場合のテストの書き方
-class TestExportConfig:
-    '''各インスタンス変数をiniファイルに出力できるか検証
-    - 異常系
-        - pathに文字列以外の型が与えられる
-        - pathが存在しないフォルダを指している
-        - pathの末尾が`.ini`でない
-    - 正常系: 各インスタンス変数の値がiniファイルに書き出される
-    '''
-    def setup_method(self, method):
-        '''検証に使用するデータを生成する
-        '''
-        # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.fake_ini.writelines([
-            '[FITBIT]\n',
-            'client_id = fake_client_id\n',
-            'client_secret = fake_client_secret\n',
-            'authorization_code = fake_auth_code\n',
-            'access_token = fake_access_token\n',
-            'refresh_token = fake_refresh_token\n'
-        ])
-        self.fake_ini.seek(0)
-
-    def teardown_method(self, method):
-        '''ダミーのiniファイル削除
-        '''
-        self.fake_ini.close()
-
-    def test_invalid_path_not_string(self):
-        '''検証が正しくない: pathに文字列以外の型が与えられる
-        '''
-        # 準備
-        invalid_path = 71
-
-        # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
-        with pytest.raises(TypeError, match='"path" type must be str.'):
-            fb.export_config(invalid_path)
-
-    def test_invalid_path_not_found(self):
-        '''検証が正しくない: pathが存在しないフォルダを指している
-        '''
-        # 準備
-        invalid_path = './data/fake/fake_config.ini'
-
-        # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
-        with pytest.raises(ValueError, match='no such directory'):
-            fb.export_config(invalid_path)
-
-    def test_invalid_path_not_ini(self):
-        '''検証が正しくない: pathの末尾が`.ini`でない
-        '''
-        # 準備
-        invalid_path = 'data/fake_config.yml'
-
-        # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
-        with pytest.raises(ValueError, match='"path" must be an .ini file.'):
-            fb.export_config(invalid_path)
-
-    # TODO: ファイル出力のテスト方法
-    def test_valid(self):
-        '''検証が正しい: 各インスタンス変数の値がiniファイルに書き出される
-        '''
-        # 準備
-        valid_ini = 'data/fake_config.ini'
-
-        # 実行
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
-        fb.export_config(valid_ini)
-
-        # 検証
-        validate_fb = Fitbit()
-        validate_fb.read_config(valid_ini)
-        assert validate_fb.client_id == 'fake_client_id'
-        assert validate_fb.client_secret == 'fake_client_secret'
-        assert validate_fb.auth_code == 'fake_auth_code'
-        assert validate_fb.access_token == 'fake_access_token'
-        assert validate_fb.refresh_token == 'fake_refresh_token'
-
-        # 出力ファイルを削除
-        os.remove(valid_ini)
 
 
 # TODO: access_tokenが不正の場合にErrorを返すmockの作成方法
@@ -402,24 +185,12 @@ class TestFetchTraceData:
         - 指定した日にちの"sleep"データを取得する
     '''
     def setup_method(self, method):
-        '''検証に使用するデータを生成する
+        '''検証に使用するダミーのclientIdとclientSecret, refreshTokenを用意する
         '''
-        # 検証にパスするiniファイル作成
-        self.fake_ini = tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', suffix='.ini', dir='./data')
-        self.fake_ini.writelines([
-            '[FITBIT]\n',
-            'client_id = fake_client_id\n',
-            'client_secret = fake_client_secret\n',
-            'authorization_code = fake_auth_code\n',
-            'access_token = fake_access_token\n',
-            'refresh_token = fake_refresh_token\n'
-        ])
-        self.fake_ini.seek(0)
-
-    def teardown_method(self, method):
-        '''ダミーのiniファイル削除
-        '''
-        self.fake_ini.close()
+        self.fake_client_id = 'fake_client_id'
+        self.fake_client_secret = 'fake_client_secret'
+        self.fake_access_token = 'fake_access_token'
+        self.bad_access_token = 'bad_access_token'
 
     def test_invalid_category_not_string(self):
         '''検証が正しくない: categoryに文字列以外の型が与えられる
@@ -429,8 +200,11 @@ class TestFetchTraceData:
         invalid_category = 71
 
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            access_token=self.fake_access_token
+        )
         with pytest.raises(TypeError, match='"category" type must be str.'):
             fb.fetch_trace_data(invalid_category, fake_date)
 
@@ -442,8 +216,11 @@ class TestFetchTraceData:
         invalid_category = 'fake_category'
 
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            access_token=self.fake_access_token
+        )
         with pytest.raises(ValueError, match='Please input "activities" or "foods" or "sleep"'):
             fb.fetch_trace_data(invalid_category, fake_date)
 
@@ -455,8 +232,11 @@ class TestFetchTraceData:
         invalid_date = 20210925
 
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            access_token=self.fake_access_token
+        )
         with pytest.raises(TypeError, match='"date" type must be str.'):
             fb.fetch_trace_data(fake_category, invalid_date)
 
@@ -468,8 +248,11 @@ class TestFetchTraceData:
         invalid_date = '20210925'
 
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            access_token=self.fake_access_token
+        )
         with pytest.raises(ValueError, match='"date" must be yyyy-mm-dd.'):
             fb.fetch_trace_data(fake_category, invalid_date)
 
@@ -481,21 +264,27 @@ class TestFetchTraceData:
         fake_date = '2021-09-25'
 
         # 実行・検証
-        fb = Fitbit()
-        fb.read_config(self.fake_ini.name)
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            access_token=self.bad_access_token
+        )
         with pytest.raises(urllib.error.HTTPError, match='HTTP Error 401: Unauthorized'):
             fb.fetch_trace_data(fake_category, fake_date)
 
+    @pytest.mark.skip('mockが作成できていないため')
     def test_valid_activities(self):
         '''検証が正しい: 指定した日にちの"activities"データを取得する
         '''
         pass
 
+    @pytest.mark.skip('mockが作成できていないため')
     def test_valid_foods(self):
         '''検証が正しい: 指定した日にちの"foods"データを取得する
         '''
         pass
 
+    @pytest.mark.skip('mockが作成できていないため')
     def test_valid_sleep(self):
         '''検証が正しい: 指定した日にちの"sleep"データを取得する
         '''
