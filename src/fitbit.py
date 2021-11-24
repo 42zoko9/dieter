@@ -69,6 +69,30 @@ class Fitbit:
         # 辞書型で出力
         return json.loads(body.decode('utf-8'))
 
+    def refresh_access_token(self) -> None:
+        '''refresh_token経由でaccess_tokenとrefresh_tokenを更新する
+        '''
+        basic_user_and_pasword = base64.b64encode('{}:{}'.format(self.client_id, self.client_secret).encode('utf-8'))
+        url = 'https://api.fitbit.com/oauth2/token'
+        data = {
+            'grant_type': 'refresh_token',
+            'refresh_token': self.refresh_token
+        }
+        headers = {
+            'Authorization': 'Basic ' + basic_user_and_pasword.decode('utf-8'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+        req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), headers=headers)
+        try:
+            with urllib.request.urlopen(req) as res:
+                body = res.read()
+        except urllib.error.HTTPError as e:
+            print('Isnt the refresh token expired? Try method "fetch_authorization_code" & "fetch_tokens".')
+            raise e
+        res_dict = eval(body.decode('utf-8'))
+        self.access_token = res_dict['access_token']
+        self.refresh_token = res_dict['refresh_token']
+
     def fetch_tokens(
         self,
         redirect_uri: str = 'http://localhost:8080',
@@ -105,30 +129,6 @@ class Fitbit:
                 body = res.read()
         except urllib.error.HTTPError as e:
             print('Isnt the authorization code expired? Try method "fetch_authorization_code".')
-            raise e
-        res_dict = eval(body.decode('utf-8'))
-        self.access_token = res_dict['access_token']
-        self.refresh_token = res_dict['refresh_token']
-
-    def refresh_access_token(self) -> None:
-        '''refresh_token経由でaccess_tokenとrefresh_tokenを更新する
-        '''
-        basic_user_and_pasword = base64.b64encode('{}:{}'.format(self.client_id, self.client_secret).encode('utf-8'))
-        url = 'https://api.fitbit.com/oauth2/token'
-        data = {
-            'grant_type': 'refresh_token',
-            'refresh_token': self.refresh_token
-        }
-        headers = {
-            'Authorization': 'Basic ' + basic_user_and_pasword.decode('utf-8'),
-            'Content-Type': 'application/x-www-form-urlencoded',
-        }
-        req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), headers=headers)
-        try:
-            with urllib.request.urlopen(req) as res:
-                body = res.read()
-        except urllib.error.HTTPError as e:
-            print('Isnt the refresh token expired? Try method "fetch_authorization_code" & "fetch_tokens".')
             raise e
         res_dict = eval(body.decode('utf-8'))
         self.access_token = res_dict['access_token']
