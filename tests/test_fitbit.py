@@ -289,3 +289,99 @@ class TestFetchTraceData:
         '''検証が正しい: 指定した日にちの"sleep"データを取得する
         '''
         pass
+
+
+# TODO: access_tokenが不正の場合にErrorを返すmockの作成方法
+# TODO: データを書き込む系のAPIの検証方法
+class TestCreateBodyLog:
+    '''
+    - 異常系
+        - body_typeに文字列以外の型が与えられる
+        - body_typeにて"fat", "weight"以外の値が与えられる
+        - valueにfloat以外の型が与えられる
+        - valueに異常な値(0未満)が与えられる
+        - created_dateに文字列以外の型が与えられる
+        - created_dateが文字列であるが指定したフォーマットに従っていない
+        - created_timeに文字列以外の型が与えられる
+        - created_timeが文字列であるが指定したフォーマットに従っていない
+        - 生成したtokenにweightのアクセス権限が付与されていない
+        - access_tokenの期限切れ
+    - 正常系:
+        - 指定した日時の"weight"が入力される
+        - 指定した日時の"fat"が入力される
+    '''
+    def setup_method(self, method):
+        self.fake_client_id = 'fake_client_id'
+        self.fake_client_secret = 'fake_client_secret'
+        self.denied_access_token = 'denied_access_token'
+        self.expierd_access_token = 'expired_access_token'
+        self.fake_access_token = 'fake_access_token'
+
+    def test_invalid_body_type_not_string(self):
+        '''検証が正しくない: body_typeに文字列以外の型が与えられる
+        '''
+        pass
+
+    def test_invalid_body_type_not_abide_by_format(self):
+        '''検証が正しくない: body_typeにて"fat", "weight"以外の値が与えられる
+        '''
+        pass
+
+    def test_invalid_value_not_float(self):
+        '''検証が正しくない: valueにfloat以外の型が与えられる
+        '''
+        pass
+
+    def test_invalid_value_leq_zero(self):
+        '''検証が正しくない: valueに異常な値(0未満)が与えられる
+        '''
+        pass
+
+    def test_invalid_created_date_not_string(self):
+        '''検証が正しくない: created_dateに文字列以外の型が与えられる
+        '''
+        pass
+
+    def test_invalid_creatd_date_not_abide_by_format(self):
+        '''検証が正しくない: created_dateにて"fat", "weight"以外の値が与えられる
+        '''
+        pass
+
+    def test_invalid_created_time_not_string(self):
+        '''検証が正しくない: created_dateに文字列以外の型が与えられる
+        '''
+        pass
+
+    def test_invalid_creatd_time_not_abide_by_format(self):
+        '''検証が正しくない: created_dateにて"fat", "weight"以外の値が与えられる
+        '''
+        pass
+
+    @pytest.mark.skip('これまで抜けていた観点, 今後検証する必要あり')
+    def test_invalid_permission_denied(self):
+        '''検証が正しくない: 生成したtokenにprofileのアクセス権限が付与されていない
+        '''
+        pass
+
+    def test_invalid_access_token_epierd(self):
+        '''検証が正しくない: access_tokenの期限切れ
+        '''
+        fake_body_type = 'fat'
+        fake_value = 25.1
+        fake_date = '2021-11-01'
+        fake_time = '13:00:01'
+        fb = Fitbit(
+            client_id=self.fake_client_id,
+            client_secret=self.fake_client_secret,
+            access_token=self.expierd_access_token
+        )
+        with pytest.raises(urllib.error.HTTPError, match='HTTP Error 401: Unauthorized'):
+            fb.create_body_log(
+                fake_body_type, fake_value, fake_date, fake_time
+            )
+
+    @pytest.mark.skip('mockが作成できていないため')
+    def test_valid(self):
+        '''検証が正しい: プロフィールが格納された辞書型のデータを取得する
+        '''
+        pass
