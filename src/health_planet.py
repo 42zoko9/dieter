@@ -13,7 +13,7 @@ from pandas.tseries.offsets import DateOffset
 class HealthPlanet:
     access_token: str
 
-    def fetch_body_composition_data(self, from_date: str, to_date: str) -> Dict[Any, Any]:
+    def fetch_body_composition_data(self, from_date: str, to_date: str) -> Dict[str, Any]:
         '''体重と体脂肪率を取得し辞書型で取得する
 
         Args:
@@ -21,7 +21,7 @@ class HealthPlanet:
             to_date (str): データを取得したい期間の終了日、"yyyy-mm-dd"形式で入力
 
         Returns:
-            Dict[Any, Any]: 体組成データ
+            Dict[str, Any]: 体組成データ
         '''
         # 引数from_dateの型確認
         if type(from_date) != str:
@@ -51,7 +51,6 @@ class HealthPlanet:
             raise ValueError('"from_date" is over 3 month ago.')
 
         # 該当データを取得
-        # データが存在しない時はExceptionを返す
         params = {
             'access_token': self.access_token,
             'data': '1',
@@ -63,23 +62,20 @@ class HealthPlanet:
         url = 'https://www.healthplanet.jp/status/innerscan.json/?' + p
         with urllib.request.urlopen(url) as res:
             result = res.read()
-        result_dic = json.loads(result)
-        data = result_dic['data']
-        # if len(data) == 0:
-        #     raise Exception('fetched data is empty')
-        return data
+        return json.loads(result)
 
 
 if __name__ == '__main__':
     # 以下，ローカル環境で動作検証時に使用
     import configparser
+    import pprint
 
     ini_path = 'local.ini'
     config_ini = configparser.ConfigParser()
     config_ini.read(ini_path, encoding='utf-8')
     access_token = config_ini.get('HEALTH PLANET', 'access-token')
 
-    d = '2021-09-28'
+    d = '2021-11-01'
     hp = HealthPlanet(access_token)
-    result = hp.fetch_body_composition_data(d, d)[0]
-    print(result)
+    result = hp.fetch_body_composition_data(d, d)
+    pprint.pprint(result)
