@@ -23,7 +23,7 @@ def main(event, context) -> None:
 
 
 def run(prj: Union[None, str] = None) -> None:
-    '''実行日の前日の健康データを各APIから取得しgcsへ保存する(ローカル環境で実行する場合はこちら)
+    '''実行日の前日の健康データを各APIから取得・更新しgcsへデータを保存する(ローカル環境で実行する場合はこちら)
 
     Args:
         prj (Union[None, str], optional): 関数を実行する環境，未入力(None)ならばローカルとする.
@@ -128,6 +128,21 @@ def run(prj: Union[None, str] = None) -> None:
             os.remove(fb_path)
         except Exception:
             print(traceback.format_exc())
+
+    # Fitbitに体組成データの転送
+    body_compositions_data = body_compositions['data']
+    if len(body_compositions_data) > 0:
+        for i in body_compositions_data:
+            created_datetime = pd.to_datetime(i['date']).strftime('%Y-%m-%d %H:%M')
+            splited_created_datetime = created_datetime.split(' ')
+            fb.create_body_log(
+                body_type='weight' if i['tag'] == '6021' else 'fat',
+                value=float(i['keydata']),
+                created_date=splited_created_datetime[0],
+                created_time=splited_created_datetime[1] + ':00'
+            )
+    else:
+        print('body compositions is empty.')
 
 
 if __name__ == '__main__':
