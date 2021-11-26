@@ -2,7 +2,8 @@ import configparser
 import json
 import os
 import traceback
-import urllib
+import urllib.error
+import urllib.request
 from typing import Union
 
 import pandas as pd
@@ -12,6 +13,7 @@ from pandas.tseries.offsets import DateOffset
 from src.fitbit import Fitbit
 from src.gcp import store_gcs
 from src.health_planet import HealthPlanet
+from src.twitter import Twitter
 
 
 def main(event, context) -> None:
@@ -40,6 +42,7 @@ def run(prj: Union[None, str] = None) -> None:
         os.makedirs('/tmp/data/fitbit/activities/', exist_ok=True)
         os.makedirs('/tmp/data/fitbit/foods/', exist_ok=True)
         os.makedirs('/tmp/data/fitbit/sleep/', exist_ok=True)
+        os.makedirs('/tmp/data/ringfitadventure/', exist_ok=True)
 
     # secret managerから値を取得
     if prj is None:
@@ -51,12 +54,14 @@ def run(prj: Union[None, str] = None) -> None:
             'fb-client-id': config_ini.get('FITBIT', 'client-id'),
             'fb-client-secret': config_ini.get('FITBIT', 'client-secret'),
             'fb-access-token': config_ini.get('FITBIT', 'access-token'),
-            'fb-refresh-token': config_ini.get('FITBIT', 'refresh-token')
+            'fb-refresh-token': config_ini.get('FITBIT', 'refresh-token'),
+            'tw-user-id': config_ini.get('TWITTER', 'user-id'),
+            'tw-beare-token': config_ini.get('TWITTER', 'escaped-bearer-token')
         }
     else:
         secret_manager_client = secretmanager.SecretManagerServiceClient()
         api_connect_values = {}
-        for k in ['hp-access-token', 'fb-client-id', 'fb-client-secret', 'fb-access-token', 'fb-refresh-token']:
+        for k in ['hp-access-token', 'fb-client-id', 'fb-client-secret', 'fb-access-token', 'fb-refresh-token', 'tw-user-id', 'tw-beare-token']:
             name = secret_manager_client.secret_version_path(prj, k, 'latest')
             response = secret_manager_client.access_secret_version(request={'name': name})
             api_connect_values[k] = response.payload.data.decode('utf-8')
@@ -130,19 +135,36 @@ def run(prj: Union[None, str] = None) -> None:
             print(traceback.format_exc())
 
     # Fitbitに体組成データの転送
-    body_compositions_data = body_compositions['data']
-    if len(body_compositions_data) > 0:
-        for i in body_compositions_data:
-            created_datetime = pd.to_datetime(i['date']).strftime('%Y-%m-%d %H:%M')
-            splited_created_datetime = created_datetime.split(' ')
-            fb.create_body_log(
-                body_type='weight' if i['tag'] == '6021' else 'fat',
-                value=float(i['keydata']),
-                created_date=splited_created_datetime[0],
-                created_time=splited_created_datetime[1] + ':00'
-            )
+    if prj is not None:
+        body_compositions_data = body_compositions['data']
+        if len(body_compositions_data) > 0:
+            for i in body_compositions_data:
+                created_datetime = pd.to_datetime(i['date']).strftime('%Y-%m-%d %H:%M')
+                splited_created_datetime = created_datetime.split(' ')
+                fb.create_body_log(
+                    body_type='weight' if i['tag'] == '6021' else 'fat',
+                    value=float(i['keydata']),
+                    created_date=splited_created_datetime[0],
+                    created_time=splited_created_datetime[1] + ':00'
+                )
+        else:
+            print('body compositions is empty.')
+
+    # Twitterからリングフィットの実績画像URLを取得
+    tw = Twitter(api_connect_values['tw-user-id'], api_connect_values['tw-beare-token'])
+    figure_urls = tw.search_ringfitadventure_results(day_str)
+    if len(figure_urls) > 0:
+        for u in figure_urls:
+            figure_name = day_str + '_' + u.replace('https://pbs.twimg.com/media/', '')
+            figure_path = additional_path + 'data/ring_fit_adventure/' + figure_name
+            urllib.request.urlretrieve(u, figure_path)
+            try:
+                figure_gcs_path = 'ring_fit_adventure/' + figure_name
+                store_gcs(figure_path, figure_gcs_path)
+            except Exception:
+                print('figures are saved local folder.')
     else:
-        print('body compositions is empty.')
+        print('ringfitadventures results are nothing.')
 
 
 if __name__ == '__main__':
