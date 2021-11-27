@@ -42,7 +42,7 @@ def run(prj: Union[None, str] = None) -> None:
         os.makedirs('/tmp/data/fitbit/activities/', exist_ok=True)
         os.makedirs('/tmp/data/fitbit/foods/', exist_ok=True)
         os.makedirs('/tmp/data/fitbit/sleep/', exist_ok=True)
-        os.makedirs('/tmp/data/ringfitadventure/', exist_ok=True)
+        os.makedirs('/tmp/data/ring_fit_adventure/', exist_ok=True)
 
     # secret managerから値を取得
     if prj is None:
