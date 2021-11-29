@@ -17,8 +17,14 @@ node_modules
 #!include:.gitignore
 
 # dieter
+*.ini
 RAEDME.md
 poetry.lock
 pyproject.toml
 .vscode/*
 tests/*
+data/health_planet/*
+data/fitbit/activities/*
+data/fitbit/foods/*
+data/fitbit/sleep/*
+data/ring_fit_adventure/*
