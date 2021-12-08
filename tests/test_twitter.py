@@ -5,7 +5,6 @@ from src.twitter import Twitter
 class TestSearchRingfitadventureResults:
     '''画像のURLをまとめたリストを取得できるか検証
     - 異常系
-        - dateが文字列以外で与えられている
         - dateが文字列であるが指定したフォーマットに従っていない
         - dateが実行時よりも7日以上前が与えられている
         - bearer_tokenが不適切
@@ -19,19 +18,8 @@ class TestSearchRingfitadventureResults:
         self.fake_user_id = 'fake_user_id'
         self.fake_token = 'fake_token'
 
-    def test_invalid_start_date_not_string(self):
-        '''検証が正しくない: dateが文字列であるが文字列以外で与えられている
-        '''
-        # 準備
-        bad_start_date = 20211108
-
-        # 実行・検証
-        tw = Twitter(self.fake_user_id, self.fake_token)
-        with pytest.raises(TypeError, match='"start_date" type must be str.'):
-            tw.search_ringfitadventure_results(bad_start_date)
-
     def test_invalid_start_date_not_abide_by_format(self):
-        '''検証が正しくない: dateが指定したフォーマットに従っていない
+        '''検証が正しくない: dateが文字列であるが指定したフォーマットに従っていない
         '''
         # 準備
         bad_start_date = '20211108'

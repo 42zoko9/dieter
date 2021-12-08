@@ -1,18 +1,17 @@
+import datetime
 import json
 import re
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
 from typing import List
 
 import pandas as pd
-from pandas.tseries.offsets import DateOffset
 
 
-@dataclass
 class Twitter:
-    user_id: str
-    bearer_token: str
+    def __init__(self, user_id: str, bearer_token: str):
+        self.user_id = user_id
+        self.bearer_token = bearer_token
 
     def search_ringfitadventure_results(self, start_date: str) -> List[str]:
         '''リングフィット実績画像のurlをリストで返す
@@ -23,17 +22,13 @@ class Twitter:
         Returns:
             List[str]: リングフィットの実績画像のurlをまとめたリスト
         '''
-        # 引数dateの型確認
-        if type(start_date) != str:
-            raise TypeError('"start_date" type must be str.')
-
         # dateのフォーマット確認
         if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', start_date):
             raise ValueError('"start_date" must be yyyy-mm-dd.')
 
         # 日付が現時点よりも７日以上前でないことを確認
-        datetime = pd.to_datetime(start_date).tz_localize('Asia/Tokyo')
-        if datetime < (pd.Timestamp.today(tz='Asia/Tokyo') - DateOffset(days=7)):
+        now = pd.to_datetime(start_date).tz_localize('Asia/Tokyo')
+        if now < (pd.Timestamp.today(tz='Asia/Tokyo') - datetime.timedelta(days=7)):
             raise ValueError('this method can search tweets from the last seven days')
 
         # #RingFitAdventureのタグがついたツイートを検索する
@@ -45,7 +40,7 @@ class Twitter:
             'query': query,
             'expansions': 'attachments.media_keys',
             'media.fields': 'url',
-            'start_time': datetime.tz_convert('UTC').strftime('%Y-%m-%dT%H:%M:%SZ')
+            'start_time': now.tz_convert('UTC').strftime('%Y-%m-%dT%H:%M:%SZ')
         }
         p = urllib.parse.urlencode(params, safe='', quote_via=urllib.parse.quote)
         url = 'https://api.twitter.com/2/tweets/search/recent?' + p

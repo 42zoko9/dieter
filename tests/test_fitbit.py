@@ -8,11 +8,9 @@ from src.fitbit import Fitbit
 class TestFetchAuthorizationCode:
     '''authorization codeを取得できるかテストする
     - 異常系
-        - scopeがlist以外で与えられている
         - scopeのlistの中に不正な文字列が混入している
         - expiers_inがint以外で与えられている
         - expiers_inに0以下の値が与えられる
-        - redicret_idが文字列ではない
         - redirect_uriがURIの形をとっていない
         - client_idの入力にて間違った入力をする
         - client_secretの入力にて間違った入力をする
@@ -24,18 +22,8 @@ class TestFetchAuthorizationCode:
         self.fake_client_id = 'fake_client_id'
         self.fake_client_secret = 'fake_client_secret'
 
-    def test_invalid_scope_not_list(self):
-        '''検証が正しくない: scopeがlist以外で与えられている
-        '''
-        pass
-
     def test_invalid_scope_contain_not_string(self):
         '''検証が正しくない: scopeのlistの中に不正な文字列が混入している
-        '''
-        pass
-
-    def test_invalid_expiers_in_not_int(self):
-        '''検証が正しくない: expiers_inがint以外で与えられている
         '''
         pass
 
@@ -74,7 +62,6 @@ class TestFetchAuthorizationCode:
 class TestFetchTokens:
     '''access_tokenとrefresh_tokenを取得し更新できるかを検証
     - 異常系
-        - redirect_uriが文字列以外の型で与えられる
         - redirect_uriが文字列であるがuriのフォーマットに従っていない
         - auth_codeが未取得もしくは期限切れである
     - 正常系: access_tokenとrefresh_tokenの値が更新される
@@ -85,21 +72,6 @@ class TestFetchTokens:
         self.fake_client_id = 'fake_client_id'
         self.fake_client_secret = 'fake_client_secret'
         self.fake_auth_code = 'fake_auth_code'
-
-    def test_invalid_redirect_uri_not_string(self):
-        '''検証が正しくない: redirect_uriが文字列以外で与えられている
-        '''
-        # 準備
-        invalid_redirect_uri = int(71)
-
-        # 実行・検証
-        fb = Fitbit(
-            client_id=self.fake_client_id,
-            client_secret=self.fake_client_secret,
-            auth_code=self.fake_auth_code
-        )
-        with pytest.raises(TypeError, match='"redirect_uri" type must be str.'):
-            fb.fetch_tokens(invalid_redirect_uri)
 
     def test_invalid_redirect_uri_not_uri_format(self):
         '''検証が正しくない: redirect_uriがuriのフォーマットに従っていない
@@ -174,9 +146,7 @@ class TestRefreshAccessToken:
 class TestFetchTraceData:
     '''指定した日付とカテゴリのトレースデータが出力できているかテストする
     - 異常系
-        - categoryに文字列以外の型が与えられる
         - categoryにて"activities", "foods", "sleep"以外の値が与えられる
-        - dateに文字列以外の型が与えられる
         - dateが文字列であるが指定したフォーマットに従っていない
         - access_tokenが期限切れ
     - 正常系
@@ -191,22 +161,6 @@ class TestFetchTraceData:
         self.fake_client_secret = 'fake_client_secret'
         self.fake_access_token = 'fake_access_token'
         self.bad_access_token = 'bad_access_token'
-
-    def test_invalid_category_not_string(self):
-        '''検証が正しくない: categoryに文字列以外の型が与えられる
-        '''
-        # 準備
-        fake_date = '2021-09-25'
-        invalid_category = 71
-
-        # 実行・検証
-        fb = Fitbit(
-            client_id=self.fake_client_id,
-            client_secret=self.fake_client_secret,
-            access_token=self.fake_access_token
-        )
-        with pytest.raises(TypeError, match='"category" type must be str.'):
-            fb.fetch_trace_data(invalid_category, fake_date)
 
     def test_invalid_category_bad_string(self):
         '''検証が正しくない: categoryにて"activities", "foods", "sleep"以外の値が与えられる
@@ -223,22 +177,6 @@ class TestFetchTraceData:
         )
         with pytest.raises(ValueError, match='Please input "activities" or "foods" or "sleep"'):
             fb.fetch_trace_data(invalid_category, fake_date)
-
-    def test_invalid_date_not_string(self):
-        '''検証が正しくない: dateに文字列以外の型が与えられる
-        '''
-        # 準備
-        fake_category = 'activities'
-        invalid_date = 20210925
-
-        # 実行・検証
-        fb = Fitbit(
-            client_id=self.fake_client_id,
-            client_secret=self.fake_client_secret,
-            access_token=self.fake_access_token
-        )
-        with pytest.raises(TypeError, match='"date" type must be str.'):
-            fb.fetch_trace_data(fake_category, invalid_date)
 
     def test_invalid_date_not_abide_by_format(self):
         '''検証が正しくない: dateが文字列であるが指定したフォーマットに従っていない
@@ -296,13 +234,10 @@ class TestFetchTraceData:
 class TestCreateBodyLog:
     '''
     - 異常系
-        - body_typeに文字列以外の型が与えられる
         - body_typeにて"fat", "weight"以外の値が与えられる
         - valueにfloat以外の型が与えられる
         - valueに異常な値(0未満)が与えられる
-        - created_dateに文字列以外の型が与えられる
         - created_dateが文字列であるが指定したフォーマットに従っていない
-        - created_timeに文字列以外の型が与えられる
         - created_timeが文字列であるが指定したフォーマットに従っていない
         - 生成したtokenにweightのアクセス権限が付与されていない
         - access_tokenの期限切れ
@@ -317,18 +252,8 @@ class TestCreateBodyLog:
         self.expierd_access_token = 'expired_access_token'
         self.fake_access_token = 'fake_access_token'
 
-    def test_invalid_body_type_not_string(self):
-        '''検証が正しくない: body_typeに文字列以外の型が与えられる
-        '''
-        pass
-
     def test_invalid_body_type_not_abide_by_format(self):
         '''検証が正しくない: body_typeにて"fat", "weight"以外の値が与えられる
-        '''
-        pass
-
-    def test_invalid_value_not_float(self):
-        '''検証が正しくない: valueにfloat以外の型が与えられる
         '''
         pass
 
@@ -337,18 +262,8 @@ class TestCreateBodyLog:
         '''
         pass
 
-    def test_invalid_created_date_not_string(self):
-        '''検証が正しくない: created_dateに文字列以外の型が与えられる
-        '''
-        pass
-
     def test_invalid_creatd_date_not_abide_by_format(self):
         '''検証が正しくない: created_dateにて"fat", "weight"以外の値が与えられる
-        '''
-        pass
-
-    def test_invalid_created_time_not_string(self):
-        '''検証が正しくない: created_dateに文字列以外の型が与えられる
         '''
         pass
 

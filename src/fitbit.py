@@ -5,17 +5,24 @@ import sys
 import urllib.parse
 import urllib.request
 import webbrowser
-from dataclasses import dataclass
 from typing import Any, Dict, List
 
 
-@dataclass
 class Fitbit:
-    client_id: str
-    client_secret: str
-    auth_code: str = ''
-    access_token: str = ''
-    refresh_token: str = ''
+
+    def __init__(
+        self,
+        client_id: str,
+        client_secret: str,
+        auth_code: str = '',
+        access_token: str = '',
+        refresh_token: str = ''
+    ):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.auth_code = auth_code
+        self.access_token = access_token
+        self.refresh_token = refresh_token
 
     def fetch_trace_data(
         self,
@@ -31,10 +38,6 @@ class Fitbit:
         Returns:
             Dict[Any, Any]: 取得データ
         '''
-        # 引数categoryの型確認
-        if type(category) != str:
-            raise TypeError('"category" type must be str.')
-
         # categoryの前処理
         if category == 'activities':
             uri_category = category
@@ -44,10 +47,6 @@ class Fitbit:
             uri_category = category
         else:
             raise ValueError('Please input "activities" or "foods" or "sleep"')
-
-        # 引数dateの型確認
-        if type(date) != str:
-            raise TypeError('"date" type must be str.')
 
         # dateのフォーマット確認
         if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', date):
@@ -87,13 +86,6 @@ class Fitbit:
         Returns:
             Dict[Any, Any]: fitbitに記録したデータ
         '''
-        # 引数body_typeの値確認
-        if type(body_type) == str:
-            if body_type not in ['weight', 'fat']:
-                raise ValueError('Please input "weight" or "fat".')
-        else:
-            raise TypeError('"body_type" type must be str.')
-
         # 引数valueの値確認
         if type(value) == float:
             if value < 0:
@@ -101,17 +93,9 @@ class Fitbit:
         else:
             raise TypeError('"value" type must be float or int.')
 
-        # 引数created_dateの型確認
-        if type(created_date) != str:
-            raise TypeError('"created_date" type must be str.')
-
         # created_dateのフォーマット確認
         if not re.search(r'^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', created_date):
             raise ValueError('"created_date" must be yyyy-MM-dd.')
-
-        # 引数created_timeの型確認
-        if type(created_time) != str:
-            raise TypeError('"created_time" type must be str.')
 
         # created_timeのフォーマット確認
         if not re.search(r'^[0-2][0-9]:[0-6][0-9]:[0-6][0-9]$', created_time):
@@ -169,10 +153,6 @@ class Fitbit:
         Args:
             redirect_uri (str): リダイレクト先のURI
         '''
-        # 引数の型確認
-        if type(redirect_uri) != str:
-            raise TypeError('"redirect_uri" type must be str.')
-
         # 引数の文字列フォーマット確認
         if not re.search(r'^http(|s)://.+$', redirect_uri):
             raise ValueError('"redirect_uri" must be a uri format.')
@@ -284,8 +264,3 @@ if __name__ == '__main__':
                 config_ini.write(f)
             result = fb.fetch_trace_data(ctg, t)
         print('success: {}'.format(ctg))
-
-    # fat = fb.create_body_log('fat', 25.6, '2021-11-01', '10:00:00')
-    # pprint.pprint(fat)
-    # weight = fb.create_body_log('weight', 85.0, '2021-11-01', '10:00:00')
-    # pprint.pprint(weight)

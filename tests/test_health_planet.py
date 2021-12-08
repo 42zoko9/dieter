@@ -5,9 +5,7 @@ from src.health_planet import HealthPlanet
 class TestFetchBodyCompositionData:
     '''体組成データを取得できるか検証
     - 異常系
-        - from_dateに文字列以外の型が与えられる
         - from_dateが文字列であるが指定のフォーマットではない
-        - to_dateに文字列以外の型が与えられる
         - to_dateが文字列であるが指定のフォーマットではない
         - from_dateがto_dateよりも最近の値をとる
         - from_dateに現時点より3ヶ月前の日付が与えられている
@@ -21,18 +19,6 @@ class TestFetchBodyCompositionData:
         self.fake_access_token = 'fake_access_token'
         self.bad_access_token = 'bad_access_token'
 
-    def test_invalid_from_date_not_string(self):
-        '''from_dateに文字列以外の型が与えられる
-        '''
-        # 準備
-        invalid_from_date = 20210925
-        fake_to_date = '2021-09-25'
-
-        # 実行・検証
-        hp = HealthPlanet(self.fake_access_token)
-        with pytest.raises(TypeError, match='"from_date" type must be str.'):
-            hp.fetch_body_composition_data(invalid_from_date, fake_to_date)
-
     def test_invalid_from_date_not_abide_by_format(self):
         '''検証が正しくない: from_dateが文字列であるが指定のフォーマットではない
         '''
@@ -44,18 +30,6 @@ class TestFetchBodyCompositionData:
         hp = HealthPlanet(self.fake_access_token)
         with pytest.raises(ValueError, match='"from_date" must be yyyy-mm-dd.'):
             hp.fetch_body_composition_data(invalid_from_date, fake_to_date)
-
-    def test_invalid_to_date_not_string(self):
-        '''検証が正しくない: from_dateに文字列以外の型が与えられる
-        '''
-        # 準備
-        fake_from_date = '2021-09-25'
-        invalid_to_date = 20210925
-
-        # 実行・検証
-        hp = HealthPlanet(self.fake_access_token)
-        with pytest.raises(TypeError, match='"to_date" type must be str.'):
-            hp.fetch_body_composition_data(fake_from_date, invalid_to_date)
 
     def test_invalid_to_date_not_abide_by_format(self):
         '''検証が正しくない: from_dateが文字列であるが指定のフォーマットではない
