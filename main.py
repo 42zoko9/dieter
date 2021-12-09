@@ -1,4 +1,5 @@
 import configparser
+import datetime
 import json
 import os
 import traceback
@@ -8,7 +9,6 @@ from typing import Union
 
 import pandas as pd
 from google.cloud import secretmanager
-from pandas.tseries.offsets import DateOffset
 
 from src.fitbit import Fitbit
 from src.gcp import store_gcs
@@ -33,7 +33,7 @@ def run(prj: Union[None, str] = None) -> None:
     # 設定
     print('project env: {}'.format('local' if prj is None else 'GCP'))
     additional_path = '' if prj is None else '/tmp/'
-    day = pd.Timestamp.today(tz='Asia/Tokyo') - DateOffset(days=1)
+    day = pd.Timestamp.today(tz='Asia/Tokyo') - datetime.timedelta(days=1)
     day_str = day.strftime('%Y-%m-%d')
 
     # 一時的にファイルを保存するディレクトリを用意(cloud functions限定)

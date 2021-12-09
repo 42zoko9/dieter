@@ -1,4 +1,4 @@
-from google.cloud import storage
+import google.cloud.storage as storage
 
 
 def store_gcs(

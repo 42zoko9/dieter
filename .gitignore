@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # dieter
-*.ini
+local.ini
 *.jpg
 data/**/*.json
 .DS_Store
